@@ -1,7 +1,10 @@
 const redis = require("../libs/redis");
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
-const { generateToken, storeRefreshToken } = require("../services/token");
+const {
+  generateToken,
+  storeRefreshToken,
+} = require("../services/token.services");
 
 const signUp = async (req, res) => {
   const { email, password, name } = req.body;
