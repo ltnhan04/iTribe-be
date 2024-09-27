@@ -2,39 +2,10 @@ const redis = require("../libs/redis");
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 const { sendVerificationEmail } = require("../mailtrap/email.js");
-const { VERIFICATION_EMAIL_TEMPLATE } = require("../mailtrap/emailTemplate.js");
 const {
   generateToken,
   storeRefreshToken,
 } = require("../services/token.services");
-
-// const signUp = async (req, res) => {
-//   const { email, password, name } = req.body;
-//   try {
-//     const userExists = await User.findOne({ email });
-//     if (userExists) {
-//       return res.status(400).json({ message: "User already exists" });
-//     }
-
-//     const user = await User.create({ name, email, password });
-
-//     const { accessToken, refreshToken } = generateToken(user._id);
-//     res.cookie("refreshToken", refreshToken, {
-//       httpOnly: true,
-//       sameSite: "strict",
-//       maxAge: 7 * 24 * 60 * 60 * 1000,
-//       secure: process.env.NODE_ENV === "production",
-//     });
-//     await storeRefreshToken(user._id, refreshToken);
-//     await sendVerificationEmail(user.email, refreshToken)
-//     res
-//       .status(200)
-//       .json({ accessToken: accessToken, message: "Sign up success" });
-//   } catch (error) {
-//     console.log("Error in signup controller: ", error.message);
-//     res.status(500).json({ message: error.message });
-//   }
-// };
 
 const signUp = async (req, res) => {
   const { email, password, name } = req.body;
@@ -44,7 +15,39 @@ const signUp = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+    await redis.set(
+      `signup:${email}`,
+      JSON.stringify({ name, password, verificationCode }),
+      "EX",
+      60 * 60 * 5 //5 mins
+    );
+
+    await sendVerificationEmail(email, verificationCode);
+
+    res.status(200).json({ message: "Check your email for the OTP" });
+  } catch (error) {
+    console.log("Error in signup controller: ", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const verifySignUp = async (req, res) => {
+  const { email, otp } = req.body;
+  console.log({ email, otp });
+  try {
+    const storedData = await redis.get(`signup:${email}`);
+    if (!storedData) {
+      return res.status(400).json({ message: "OTP expired or invalid" });
+    }
+
+    const { name, password, verificationCode } = JSON.parse(storedData);
+
+    if (otp !== verificationCode.toString()) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
     const user = await User.create({ name, email, password });
+    await redis.del(`signup:${email}`);
 
     const { accessToken, refreshToken } = generateToken(user._id);
     res.cookie("refreshToken", refreshToken, {
@@ -53,25 +56,15 @@ const signUp = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === "production",
     });
-    // await storeRefreshToken(user._id, refreshToken);
-    
-    
-
-    
-    // Generate a verification code (You can replace this with your logic)
-    const verificationCode = Math.floor(100000 + Math.random() * 900000); // Example: Generate a 6-digit code
-    await redis.set(
-          `verificationCode:${user._id}`,
-          verificationCode,
-          "EX",
-          60 * 60 * 24 * 7
-        )
-        console.log(verificationCode)
-    await sendVerificationEmail(user.email, verificationCode);  // Pass the verification code
-
-    res.status(200).json({ otp: verificationCode, message: "Check your email" });
+    await storeRefreshToken(user._id, refreshToken);
+    res
+      .status(200)
+      .json({
+        accessToken: accessToken,
+        message: "Email verified and user created successfully",
+      });
   } catch (error) {
-    console.log("Error in signup controller: ", error.message);
+    console.log("Error in verify sign up controller: ", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -157,4 +150,4 @@ const refreshToken = async (req, res) => {
   }
 };
 
-module.exports = { signUp, login, logout, refreshToken };
+module.exports = { signUp, login, logout, refreshToken, verifySignUp };

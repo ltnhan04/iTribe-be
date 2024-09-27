@@ -1,19 +1,19 @@
 const { MailtrapClient } = require("mailtrap");
-const dotenv = require("dotenv");  // Make sure to require dotenv correctly
+const dotenv = require("dotenv");
 
-dotenv.config();  // Load environment variables
+dotenv.config(); // Load environment variables
 
 const mailtrapClient = new MailtrapClient({
-  endpoint: process.env.MAILTRAP_ENDPOINT,  // Ensure these variables are defined in .env
+  endpoint: process.env.MAILTRAP_ENDPOINT,
   token: process.env.MAILTRAP_TOKEN,
 });
 
 const sender = {
   email: "hello@demomailtrap.com",
-  name: "giakhoitest",
+  name: "iTribe",
 };
 
 module.exports = {
   mailtrapClient,
-  sender,  // Ensure 'sender' is exported correctly as well
+  sender,
 };
