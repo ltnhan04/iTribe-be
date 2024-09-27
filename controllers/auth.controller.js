@@ -1,10 +1,40 @@
 const redis = require("../libs/redis");
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const { sendVerificationEmail } = require("../mailtrap/email.js");
+const { VERIFICATION_EMAIL_TEMPLATE } = require("../mailtrap/emailTemplate.js");
 const {
   generateToken,
   storeRefreshToken,
 } = require("../services/token.services");
+
+// const signUp = async (req, res) => {
+//   const { email, password, name } = req.body;
+//   try {
+//     const userExists = await User.findOne({ email });
+//     if (userExists) {
+//       return res.status(400).json({ message: "User already exists" });
+//     }
+
+//     const user = await User.create({ name, email, password });
+
+//     const { accessToken, refreshToken } = generateToken(user._id);
+//     res.cookie("refreshToken", refreshToken, {
+//       httpOnly: true,
+//       sameSite: "strict",
+//       maxAge: 7 * 24 * 60 * 60 * 1000,
+//       secure: process.env.NODE_ENV === "production",
+//     });
+//     await storeRefreshToken(user._id, refreshToken);
+//     await sendVerificationEmail(user.email, refreshToken)
+//     res
+//       .status(200)
+//       .json({ accessToken: accessToken, message: "Sign up success" });
+//   } catch (error) {
+//     console.log("Error in signup controller: ", error.message);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 const signUp = async (req, res) => {
   const { email, password, name } = req.body;
@@ -23,10 +53,23 @@ const signUp = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === "production",
     });
-    await storeRefreshToken(user._id, refreshToken);
-    res
-      .status(200)
-      .json({ accessToken: accessToken, message: "Sign up success" });
+    // await storeRefreshToken(user._id, refreshToken);
+    
+    
+
+    
+    // Generate a verification code (You can replace this with your logic)
+    const verificationCode = Math.floor(100000 + Math.random() * 900000); // Example: Generate a 6-digit code
+    await redis.set(
+          `verificationCode:${user._id}`,
+          verificationCode,
+          "EX",
+          60 * 60 * 24 * 7
+        )
+        console.log(verificationCode)
+    await sendVerificationEmail(user.email, verificationCode);  // Pass the verification code
+
+    res.status(200).json({ otp: verificationCode, message: "Check your email" });
   } catch (error) {
     console.log("Error in signup controller: ", error.message);
     res.status(500).json({ message: error.message });
