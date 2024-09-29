@@ -20,7 +20,7 @@ const signUp = async (req, res) => {
       `signup:${email}`,
       JSON.stringify({ name, password, verificationCode }),
       "EX",
-      60 //1 mins
+      60 
     );
 
     await sendVerificationEmail(email, verificationCode);
