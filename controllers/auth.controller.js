@@ -1,7 +1,7 @@
 const redis = require("../libs/redis");
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
-const { sendVerificationEmail } = require("../mailtrap/email.js");
+const { sendVerificationEmail } = require("../services/mailtrap/email");
 const {
   generateToken,
   storeRefreshToken,
@@ -20,7 +20,7 @@ const signUp = async (req, res) => {
       `signup:${email}`,
       JSON.stringify({ name, password, verificationCode }),
       "EX",
-      60 * 60 * 5 //5 mins
+      60 //1 mins
     );
 
     await sendVerificationEmail(email, verificationCode);
@@ -34,7 +34,6 @@ const signUp = async (req, res) => {
 
 const verifySignUp = async (req, res) => {
   const { email, otp } = req.body;
-  console.log({ email, otp });
   try {
     const storedData = await redis.get(`signup:${email}`);
     if (!storedData) {
@@ -57,12 +56,10 @@ const verifySignUp = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
     });
     await storeRefreshToken(user._id, refreshToken);
-    res
-      .status(200)
-      .json({
-        accessToken: accessToken,
-        message: "Email verified and user created successfully",
-      });
+    res.status(200).json({
+      accessToken: accessToken,
+      message: "Email verified and user created successfully",
+    });
   } catch (error) {
     console.log("Error in verify sign up controller: ", error.message);
     res.status(500).json({ message: error.message });

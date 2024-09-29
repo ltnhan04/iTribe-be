@@ -1,7 +1,7 @@
 const { MailtrapClient } = require("mailtrap");
 const dotenv = require("dotenv");
 
-dotenv.config(); // Load environment variables
+dotenv.config();
 
 const mailtrapClient = new MailtrapClient({
   endpoint: process.env.MAILTRAP_ENDPOINT,
@@ -10,7 +10,7 @@ const mailtrapClient = new MailtrapClient({
 
 const sender = {
   email: "hello@demomailtrap.com",
-  name: "iTribe",
+  name: "iTribe Team",
 };
 
 module.exports = {

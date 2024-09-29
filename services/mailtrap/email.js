@@ -14,8 +14,6 @@ const sendVerificationEmail = async (email, verificationCode) => {
     html: htmlContent,
   };
 
-  console.log(message);
-
   try {
     await mailtrapClient.send(message);
   } catch (error) {
