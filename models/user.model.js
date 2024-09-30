@@ -19,7 +19,6 @@ const userSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      unique: true,
     },
     address: {
       street: {
@@ -48,7 +47,7 @@ const userSchema = new mongoose.Schema(
     },
     orderHistory: [
       {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Order",
       },
     ],

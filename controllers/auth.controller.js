@@ -20,7 +20,7 @@ const signUp = async (req, res) => {
       `signup:${email}`,
       JSON.stringify({ name, password, verificationCode }),
       "EX",
-      60 //1 mins
+      60
     );
 
     await sendVerificationEmail(email, verificationCode);
@@ -147,4 +147,19 @@ const refreshToken = async (req, res) => {
   }
 };
 
-module.exports = { signUp, login, logout, refreshToken, verifySignUp };
+const getProfile = async (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  signUp,
+  login,
+  logout,
+  refreshToken,
+  verifySignUp,
+  getProfile,
+};
