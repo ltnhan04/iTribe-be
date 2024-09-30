@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -7,14 +8,6 @@ const productSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    stock: {
-      type: Number,
       required: true,
     },
     category: {
@@ -37,7 +30,20 @@ const productSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    variants: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ProductVariant",
+      },
+    ],
+    tags: [String],
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+    },
   },
   { timestamps: true }
 );
+
 module.exports = mongoose.model("Product", productSchema);

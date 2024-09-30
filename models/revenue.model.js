@@ -14,6 +14,9 @@ const revenueSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    week: Number,
+    month: Number,
+    year: Number,
   },
   { timestamps: true }
 );

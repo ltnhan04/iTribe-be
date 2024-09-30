@@ -20,7 +20,6 @@ const storeRefreshToken = async (userId, refreshToken) => {
   );
 };
 
-
 module.exports = {
   generateToken,
   storeRefreshToken,

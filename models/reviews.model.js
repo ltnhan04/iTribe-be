@@ -7,7 +7,7 @@ const reviewSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
-    user: { type: mongoose.Schema.ObjectId, ref: "User", required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     rating: {
       type: Number,
       required: true,
@@ -16,6 +16,10 @@ const reviewSchema = new mongoose.Schema(
     },
     comment: {
       type: String,
+    },
+    isAnonymous: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
