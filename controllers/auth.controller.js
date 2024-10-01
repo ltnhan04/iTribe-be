@@ -14,7 +14,6 @@ const signUp = async (req, res) => {
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
-
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
     await redis.set(
       `signup:${email}`,
@@ -28,7 +27,7 @@ const signUp = async (req, res) => {
     res.status(200).json({ message: "Check your email for the OTP" });
   } catch (error) {
     console.log("Error in signup controller: ", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
 
@@ -62,7 +61,7 @@ const verifySignUp = async (req, res) => {
     });
   } catch (error) {
     console.log("Error in verify sign up controller: ", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
 
@@ -86,7 +85,7 @@ const login = async (req, res) => {
     }
   } catch (error) {
     console.log("Error in login controller: ", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
 
@@ -104,7 +103,7 @@ const logout = async (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.log("Error in logout controller: ", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
 
@@ -143,7 +142,7 @@ const refreshToken = async (req, res) => {
       .json({ accessToken, message: "Token refreshed successfully" });
   } catch (error) {
     console.log("Error in refreshToken", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
 
@@ -151,7 +150,7 @@ const getProfile = async (req, res) => {
   try {
     res.status(200).json(req.user);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
 
