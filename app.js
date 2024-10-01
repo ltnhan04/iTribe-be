@@ -5,6 +5,8 @@ const cors = require("cors");
 const connectDB = require("./libs/db");
 
 const authRoutes = require("./routes/auth.route");
+const productRoutes = require("./routes/product.route");
+const productRoutesAdmin = require("./routes/admin/product.route");
 
 dotenv.config();
 const app = express();
@@ -19,8 +21,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
+//admin
+app.use("/api/admin/products", productRoutesAdmin);
 
-app.get("/", (req, res) => {
+app.get("/", (_, res) => {
   res.send("Hello World!");
 });
 app.listen(PORT, () => {

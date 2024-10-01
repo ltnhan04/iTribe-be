@@ -14,7 +14,14 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    images: [String],
+    price: {
+      type: Number,
+      required: true,
+    },
+    images: {
+      type: [String],
+      default: [],
+    },
     rating: {
       type: Number,
       default: 0,
@@ -36,7 +43,6 @@ const productSchema = new mongoose.Schema(
         ref: "ProductVariant",
       },
     ],
-    tags: [String],
     slug: {
       type: String,
       required: true,

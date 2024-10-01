@@ -23,9 +23,7 @@ const productVariantSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    image: {
-      type: String,
-    },
+    image: { type: [String], required: true },
   },
   { timestamps: true }
 );
