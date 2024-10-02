@@ -8,31 +8,36 @@ const {
   getAllProductsAdmin,
   getProductDetailsAdmin,
   createProduct,
-  createProductVariant,
   updateProduct,
-  updateProductVariant,
   deleteProduct,
-  deleteProductVariant,
 } = require("../../controllers/admin/product.controller");
+const {
+  createProductVariant,
+  updateProductVariant,
+  deleteProductVariant,
+  getAllProductVariants,
+} = require("../../controllers/admin/productVariant.controller");
 
 router.get("/", verifyAdmin, getAllProductsAdmin);
 router.get("/:id", verifyAdmin, getProductDetailsAdmin);
 router.post("/", verifyAdmin, upload.array("images", 5), createProduct);
+router.put("/:id", verifyAdmin, upload.array("images", 5), updateProduct);
+router.delete("/:id", verifyAdmin, deleteProduct);
+
+router.get("/variant/:productId", getAllProductVariants);
 router.post(
   "/variant",
   verifyAdmin,
   upload.single("image"),
   createProductVariant
 );
-router.put("/:id", verifyAdmin, updateProduct);
-router.delete("/:id", verifyAdmin, deleteProduct);
-router.delete("/variant/:variantId", verifyAdmin, deleteProductVariant);
-
 router.put(
   "/variant/:variantId",
   verifyAdmin,
   upload.single("image"),
   updateProductVariant
 );
+
+router.delete("/variant/:variantId", verifyAdmin, deleteProductVariant);
 
 module.exports = router;
