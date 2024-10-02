@@ -230,5 +230,5 @@ module.exports = {
   verifySignUp,
   getProfile,
   forgotPassword,
-  resetPassword
+  resetPassword,
 };

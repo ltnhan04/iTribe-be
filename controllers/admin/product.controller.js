@@ -73,81 +73,36 @@ const createProduct = async (req, res) => {
   }
 };
 
-const createProductVariant = async (req, res) => {
-  try {
-    let imageUrls = [];
-    const { productId, color, storage, price, stock } = req.body;
-
-    if (req.files) {
-      imageUrls = await uploadImage(req.files);
-      console.log(imageUrls);
-    }
-
-    const productVariant = new ProductVariant({
-      productId,
-      color,
-      storage,
-      price,
-      image: imageUrls,
-      stock,
-    });
-
-    await productVariant.save();
-
-    await Product.findByIdAndUpdate(productId, {
-      $push: { variants: productVariant._id },
-    });
-
-    res.status(201).json({ message: "Product variant created successfully!" });
-  } catch (error) {
-    console.log("Error in createProductVariant controller", error.message);
-    res.status(500).json({ message: "Server Error!" });
-  }
-};
-
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    const product = await Product.findByIdAndUpdate(id, updates, { new: true });
-    res.status(200).json({ message: "Updated successfully", product });
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    let imageUrls = product.images;
+
+    if (req.files && req.files.length > 0) {
+      const newImages = await uploadImage(req.files);
+      imageUrls = [...imageUrls, ...newImages];
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { ...updates, images: imageUrls },
+      { new: true }
+    );
+
+    res
+      .status(200)
+      .json({ message: "Updated successfully", product: updatedProduct });
   } catch (error) {
     console.log("Error in updateProduct controller", error.message);
     res.status(500).json({ message: "Server Error!" });
-  }
-};
-const updateProductVariant = async (req, res) => {
-  try {
-    const { variantId } = req.params;
-    const updates = req.body;
-
-    const productVariant = await ProductVariant.findById(variantId);
-
-    if (!productVariant) {
-      return res.status(404).json({ message: "Product variant not found" });
-    }
-
-    let imageUrls = productVariant.image;
-    if (req.files && req.files.length > 0) {
-      await deleteImage(productVariant.image);
-      imageUrls = await uploadImage(req.files);
-    }
-
-    productVariant.color = updates.color || productVariant.color;
-    productVariant.storage = updates.storage || productVariant.storage;
-    productVariant.price = updates.price || productVariant.price;
-    productVariant.stock = updates.stock || productVariant.stock;
-    productVariant.image = imageUrls;
-
-    await productVariant.save();
-
-    res.status(200).json({
-      message: "Product variant updated successfully",
-      productVariant,
-    });
-  } catch (error) {
-    console.error("Error in updateProductVariant:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
@@ -175,32 +130,11 @@ const deleteProduct = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-const deleteProductVariant = async (req, res) => {
-  const { variantId, productId } = req.params;
-  try {
-    const productVariant = await ProductVariant.findByIdAndDelete(variantId);
 
-    if (!productVariant) {
-      return res.status(404).json({ message: "Product variant not found" });
-    }
-
-    await Product.findByIdAndUpdate(productId, {
-      $pull: { variants: variantId },
-    });
-
-    res.status(200).json({ message: "Product variant deleted successfully!" });
-  } catch (error) {
-    console.error("Error in deleteProductVariant:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
-  }
-};
 module.exports = {
   getAllProductsAdmin,
   getProductDetailsAdmin,
-  updateProductVariant,
-  deleteProductVariant,
   createProduct,
-  createProductVariant,
   updateProduct,
   deleteProduct,
 };
