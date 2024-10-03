@@ -7,7 +7,8 @@ const connectDB = require("./libs/db");
 const authRoutes = require("./routes/auth.route");
 const productRoutes = require("./routes/product.route");
 const productRoutesAdmin = require("./routes/admin/product.route");
-
+const userRoutesAdmin = require("./routes/admin/user.route")
+const orderRouteAdmin = require("./routes/admin/order.route")
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 //admin
 app.use("/api/admin/products", productRoutesAdmin);
+app.use("/api/admin/users", userRoutesAdmin)
+app.use("/api/admin/orders",orderRouteAdmin )
 
 app.get("/", (_, res) => {
   res.send("Hello World!");
