@@ -44,7 +44,12 @@ const createProductVariant = async (req, res) => {
     product.variants.push(productVariant._id);
     await product.save();
 
-    res.status(201).json({ message: "Product variant created successfully!" });
+    res
+      .status(201)
+      .json({
+        message: "Product variant created successfully!",
+        data: productVariant,
+      });
   } catch (error) {
     console.log("Error in createProductVariant controller:", error.message);
     res.status(500).json({ message: "Server Error!" });
