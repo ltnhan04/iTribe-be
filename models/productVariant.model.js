@@ -13,7 +13,6 @@ const productVariantSchema = new mongoose.Schema(
     },
     color: {
       type: String,
-      unique: true,
       required: true,
     },
     storage: {
@@ -31,6 +30,7 @@ const productVariantSchema = new mongoose.Schema(
     },
     slug: {
       type: String,
+      unique: true,
       required: true,
     },
     image: { type: [String], required: true },
