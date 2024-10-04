@@ -17,7 +17,6 @@ const productVariantSchema = new mongoose.Schema(
     },
     storage: {
       type: String,
-      unique: true,
       required: true,
     },
     price: {
