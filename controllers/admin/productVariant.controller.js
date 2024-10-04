@@ -18,7 +18,7 @@ const getAllProductVariants = async (req, res) => {
 
 const createProductVariant = async (req, res) => {
   try {
-    const { productId, color, storage, price, stock } = req.body;
+    const { productId, color, storage, price, stock, name, slug } = req.body;
 
     const product = await Product.findById(productId);
     if (!product) {
@@ -36,6 +36,8 @@ const createProductVariant = async (req, res) => {
       storage,
       price,
       stock,
+      name,
+      slug,
       image: imageUrls,
     });
 
@@ -44,12 +46,10 @@ const createProductVariant = async (req, res) => {
     product.variants.push(productVariant._id);
     await product.save();
 
-    res
-      .status(201)
-      .json({
-        message: "Product variant created successfully!",
-        data: productVariant,
-      });
+    res.status(201).json({
+      message: "Product variant created successfully!",
+      data: productVariant,
+    });
   } catch (error) {
     console.log("Error in createProductVariant controller:", error.message);
     res.status(500).json({ message: "Server Error!" });
@@ -79,6 +79,8 @@ const updateProductVariant = async (req, res) => {
     productVariant.storage = updates.storage || productVariant.storage;
     productVariant.price = updates.price || productVariant.price;
     productVariant.stock = updates.stock || productVariant.stock;
+    productVariant.name = updates.name || productVariant.name;
+    productVariant.slug = updates.slug || productVariant.slug;
     productVariant.image = imageUrls;
 
     await productVariant.save();
