@@ -9,7 +9,6 @@ const getAllProductsAdmin = async (_, res) => {
 
     const data = products.map((product) => ({
       _id: product._id,
-      name: product.name,
       price: product.price,
       category: product.category,
       image: product.images.length > 0 ? product.images[0] : null,
@@ -48,7 +47,7 @@ const getProductDetailsAdmin = async (req, res) => {
 };
 
 const createProduct = async (req, res) => {
-  const { name, description, price, category, slug } = req.body;
+  const { description, price, category, slug } = req.body;
 
   try {
     let imageUrls = [];
@@ -57,7 +56,6 @@ const createProduct = async (req, res) => {
     }
 
     const product = new Product({
-      name,
       description,
       price,
       category,

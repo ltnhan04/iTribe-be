@@ -9,7 +9,6 @@ const getAllProductsUser = async (_, res) => {
     const data = products.map((product) => ({
       _id: product._id,
       price: product.price,
-      name: product.name,
       category: product.category,
       image: product.images.length > 0 ? product.images[0] : null,
       rating: product.rating,
@@ -44,7 +43,6 @@ const getRecommendedProducts = async (_, res) => {
       { $sample: { size: 8 } },
       {
         $project: {
-          name: 1,
           images: 1,
           _id: 1,
           price: 1,
