@@ -28,6 +28,7 @@ const orderSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       enum: ["stripe", "pointer-wallet"],
+      default: "stripe",
       required: true,
     },
   },
