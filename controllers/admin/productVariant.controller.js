@@ -41,7 +41,13 @@ const createProductVariant = async (req, res) => {
       image: imageUrls,
     });
 
-    await productVariant.save();
+    const savedProductVariant = await productVariant.save();
+
+    if (!savedProductVariant) {
+      return res
+        .status(400)
+        .json({ message: "Failed to create product variant" });
+    }
 
     product.variants.push(productVariant._id);
     await product.save();
@@ -59,35 +65,38 @@ const createProductVariant = async (req, res) => {
 const updateProductVariant = async (req, res) => {
   try {
     const { variantId } = req.params;
-    const updates = req.body;
-
-    const productVariant = await ProductVariant.findById(variantId);
-
-    if (!productVariant) {
-      return res.status(404).json({ message: "Product variant not found" });
+    if (!variantId) {
+      return res.status(400).json({ message: "Variant ID is required" });
     }
 
-    let imageUrls = productVariant.image;
+    let imageUrls;
     if (req.file) {
+      const productVariant = await ProductVariant.findById(variantId);
+      if (!productVariant) {
+        return res.status(404).json({ message: "Product variant not found" });
+      }
       if (productVariant.image) {
         await deleteImage(productVariant.image);
       }
       imageUrls = await uploadImage(req.file);
     }
 
-    productVariant.color = updates.color || productVariant.color;
-    productVariant.storage = updates.storage || productVariant.storage;
-    productVariant.price = updates.price || productVariant.price;
-    productVariant.stock = updates.stock || productVariant.stock;
-    productVariant.name = updates.name || productVariant.name;
-    productVariant.slug = updates.slug || productVariant.slug;
-    productVariant.image = imageUrls;
+    const updates = { ...req.body };
+    if (imageUrls) updates.image = imageUrls;
 
-    await productVariant.save();
+    const updatedProductVariant = await ProductVariant.findByIdAndUpdate(
+      variantId,
+      updates,
+      { new: true }
+    );
+
+    if (!updatedProductVariant) {
+      return res.status(404).json({ message: "Product variant not found" });
+    }
 
     res.status(200).json({
       message: "Product variant updated successfully",
-      productVariant,
+      productVariant: updatedProductVariant,
     });
   } catch (error) {
     console.error("Error in updateProductVariant:", error.message);

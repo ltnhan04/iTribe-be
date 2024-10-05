@@ -6,7 +6,9 @@ const Review = require("../../models/reviews.model");
 const getAllProductsAdmin = async (_, res) => {
   try {
     const products = await Product.find({});
-
+    if (!products) {
+      res.status(404).json({ message: "No products found" });
+    }
     const data = products.map((product) => ({
       _id: product._id,
       price: product.price,
@@ -63,7 +65,10 @@ const createProduct = async (req, res) => {
       slug,
     });
 
-    await product.save();
+    const savedProduct = await product.save();
+    if (!savedProduct) {
+      return res.status(400).json({ message: "Failed to create product" });
+    }
     res.status(201).json({ message: "Product created successfully!", product });
   } catch (error) {
     console.error("Error in createProduct:", error);
