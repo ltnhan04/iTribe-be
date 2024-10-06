@@ -7,6 +7,6 @@ const {
 const { verifyToken } = require("../middleware/auth.middleware");
 
 router.post("/apply", verifyToken, applyPromotion);
-router.get("/active", getActivePromotions);
+router.get("/active", verifyToken, getActivePromotions);
 
 module.exports = router;

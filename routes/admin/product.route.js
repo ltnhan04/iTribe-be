@@ -17,13 +17,13 @@ const {
   deleteProductVariant,
   getAllProductVariants,
 } = require("../../controllers/admin/productVariant.controller");
-
+//products
 router.get("/", verifyAdmin, getAllProductsAdmin);
 router.get("/:id", verifyAdmin, getProductDetailsAdmin);
 router.post("/", verifyAdmin, upload.array("images", 5), createProduct);
 router.put("/:id", verifyAdmin, upload.array("images", 5), updateProduct);
 router.delete("/:id", verifyAdmin, deleteProduct);
-
+//variants
 router.get("/variant/:productId", getAllProductVariants);
 router.post(
   "/variant",

@@ -3,13 +3,18 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const connectDB = require("./libs/db");
-
+//customer
 const authRoutes = require("./routes/auth.route");
 const productRoutes = require("./routes/product.route");
 const ordersRoutes = require("./routes/order.route");
+const promotionRoutes = require("./routes/promotion.route");
+const reviewRoutes = require("./routes/review.route");
+//admin
 const productRoutesAdmin = require("./routes/admin/product.route");
 const userRoutesAdmin = require("./routes/admin/user.route");
 const orderRouteAdmin = require("./routes/admin/order.route");
+const promotionRoutesAdmin = require("./routes/admin/promotion.route");
+const reviewRoutesAdmin = require("./routes/admin/review.route");
 
 dotenv.config();
 const app = express();
@@ -27,10 +32,14 @@ app.use(cors(corsOptions));
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", ordersRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/promotions", promotionRoutes);
 //admin
 app.use("/api/admin/products", productRoutesAdmin);
 app.use("/api/admin/users", userRoutesAdmin);
 app.use("/api/admin/orders", orderRouteAdmin);
+app.use("/api/admin/reviews", reviewRoutesAdmin);
+app.use("/api/admin/promotions", promotionRoutesAdmin);
 
 app.get("/", (_, res) => {
   res.send("Hello World!");
