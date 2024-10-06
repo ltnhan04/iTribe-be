@@ -4,8 +4,10 @@ const {
   updateReview,
   deleteReview,
 } = require("../controllers/review.controller");
-router.post("/", createReview);
-router.put("/:id", updateReview);
-router.delete("/:id", deleteReview);
+const { verifyToken } = require("../middleware/auth.middleware");
+
+router.post("/", verifyToken, createReview);
+router.put("/:id", verifyToken, updateReview);
+router.delete("/:id", verifyToken, deleteReview);
 
 module.exports = router;
