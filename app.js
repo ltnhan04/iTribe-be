@@ -15,6 +15,7 @@ const userRoutesAdmin = require("./routes/admin/user.route");
 const orderRouteAdmin = require("./routes/admin/order.route");
 const promotionRoutesAdmin = require("./routes/admin/promotion.route");
 const reviewRoutesAdmin = require("./routes/admin/review.route");
+const revenueRoutesAdmin = require("./routes/admin/revenue.route");
 
 dotenv.config();
 const app = express();
@@ -40,6 +41,7 @@ app.use("/api/admin/users", userRoutesAdmin);
 app.use("/api/admin/orders", orderRouteAdmin);
 app.use("/api/admin/reviews", reviewRoutesAdmin);
 app.use("/api/admin/promotions", promotionRoutesAdmin);
+app.use("/api/admin/revenue", revenueRoutesAdmin);
 
 app.get("/", (_, res) => {
   res.send("Hello World!");
