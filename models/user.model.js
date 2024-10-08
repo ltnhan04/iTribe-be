@@ -47,6 +47,12 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    active :{
+      type: Boolean,
+      enum: ["true", "false"],
+      default: false,
+    }
+    ,
     orderHistory: [
       {
         type: mongoose.Schema.Types.ObjectId,
