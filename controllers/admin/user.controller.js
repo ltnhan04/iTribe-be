@@ -5,10 +5,7 @@ const getPaginatedUser = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
 
-    const users = await User.find()
-      .skip(skip)
-      .limit(parseInt(limit));
-
+    const users = await User.find().skip(skip).limit(parseInt(limit));
     res.status(200).json({ users });
   } catch (error) {
     res.status(500).json({ message: "Server Error!", error: error.message });
@@ -57,8 +54,7 @@ const getUserOrder = async (req, res) => {
     if (!user.orderHistory || user.orderHistory.length === 0) {
       return res.status(404).json({ message: "No orders found for this user" });
     }
-    
-    
+
     res.status(200).json({ orderHistory: user.orderHistory });
   } catch (error) {
     res.status(500).json({ message: "Server Error!", error: error.message });
@@ -85,6 +81,7 @@ const getUserOrderDetail = async (req, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
 const banUser = async (req, res) => {
   try {
     const { userId } = req.params; // Get userId from the request parameters
@@ -104,6 +101,7 @@ const banUser = async (req, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
 const unBanUser = async (req, res) => {
   try {
     const { userId } = req.params; 
@@ -122,7 +120,6 @@ const unBanUser = async (req, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-
 
 module.exports = {
   getPaginatedUser,

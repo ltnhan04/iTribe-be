@@ -7,14 +7,16 @@ const productVariantSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
+    name: {
+      type: String,
+      required: true,
+    },
     color: {
       type: String,
-      unique: true,
       required: true,
     },
     storage: {
       type: String,
-      unique: true,
       required: true,
     },
     price: {
@@ -24,6 +26,11 @@ const productVariantSchema = new mongoose.Schema(
     stock: {
       type: Number,
       required: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
     },
     image: { type: [String], required: true },
   },

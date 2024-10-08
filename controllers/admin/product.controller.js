@@ -1,21 +1,27 @@
 const { uploadImage, deleteImage } = require("../../services/upload.services");
 const Product = require("../../models/product.model");
 const ProductVariant = require("../../models/productVariant.model");
-const Review = require("../../models/reviews.model");
 
 const getAllProductsAdmin = async (_, res) => {
   try {
-    const products = await Product.find({});
-
-    const data = products.map((product) => ({
-      _id: product._id,
-      name: product.name,
-      price: product.price,
-      category: product.category,
-      image: product.images.length > 0 ? product.images[0] : null,
-      rating: product.rating,
-      status: product.status,
-    }));
+    const products = await Product.find({}).populate("reviews");
+    if (!products.length) {
+      res.status(404).json({ message: "No products found" });
+    }
+    const data = products.map((product) => {
+      const avgRating =
+        product.reviews.length > 0
+          ? product.reviews.reduce((acc, review) => acc + review.rating, 0)
+          : 0;
+      return {
+        _id: product._id,
+        price: product.price,
+        category: product.category,
+        image: product.images.length > 0 ? product.images[0] : null,
+        rating: avgRating,
+        status: product.status,
+      };
+    });
 
     res.status(200).json({ data });
   } catch (error) {
@@ -48,7 +54,7 @@ const getProductDetailsAdmin = async (req, res) => {
 };
 
 const createProduct = async (req, res) => {
-  const { name, description, price, category, slug } = req.body;
+  const { description, price, category, slug } = req.body;
 
   try {
     let imageUrls = [];
@@ -57,7 +63,6 @@ const createProduct = async (req, res) => {
     }
 
     const product = new Product({
-      name,
       description,
       price,
       category,
@@ -65,7 +70,10 @@ const createProduct = async (req, res) => {
       slug,
     });
 
-    await product.save();
+    const savedProduct = await product.save();
+    if (!savedProduct) {
+      return res.status(400).json({ message: "Failed to create product" });
+    }
     res.status(201).json({ message: "Product created successfully!", product });
   } catch (error) {
     console.error("Error in createProduct:", error);
