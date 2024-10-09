@@ -1,5 +1,5 @@
-const Review = require("../models/reviews.model");
-const Product = require("../models/product.model");
+const Review = require("../../models/reviews.model");
+const Product = require("../../models/product.model");
 const deleteReview = async (req, res) => {
   try {
     const { id } = req.params;
