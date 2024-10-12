@@ -130,7 +130,7 @@ const login = async (req, res) => {
         httpOnly: true,
         sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
       });
       await storeRefreshToken(user._id, refreshToken);
 
@@ -190,7 +190,7 @@ const refreshToken = async (req, res) => {
       httpOnly: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
     });
     res
       .status(200)
