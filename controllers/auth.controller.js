@@ -39,6 +39,8 @@ const verifySignUp = async (req, res) => {
   const { email, otp } = req.body;
   try {
     const storedData = await redis.get(`signup:${email}`);
+    console.log("Stored data in resentOTP:", storedData);
+
     if (!storedData) {
       return res.status(400).json({ message: "OTP expired or invalid" });
     }
@@ -68,6 +70,51 @@ const verifySignUp = async (req, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
+const resentOTP = async (req, res) => {
+  const { email } = req.body;
+  try {
+    console.log("Trying to fetch stored data for:", `signup:${email}`);
+    const storedData = await redis.get(`signup:${email}`);
+    console.log("Stored data in resentOTP:", storedData);
+    if (!storedData) {
+      return res.status(400).json({ message: "OTP expired or invalid. Please sign up again." });
+    }
+
+    const countKey = `signup:count:${email}`;
+    let resendCount = await redis.get(countKey);
+    resendCount = resendCount ? parseInt(resendCount, 10) : 0;
+
+    if (resendCount >= 4) {
+      return res.status(429).json({ message: "You have reached the limit for resending OTP. Please try again later." });
+    }
+
+    const { name, password } = JSON.parse(storedData);
+
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+    await redis.set(
+      `signup:${email}`,
+      JSON.stringify({ name, password, verificationCode }),
+      "EX",
+      60 
+    );
+
+    if (resendCount === 0) {
+      await redis.set(countKey, 1, "EX", 600); 
+    } else {
+      await redis.incr(countKey);
+    }
+
+    await sendVerificationEmail(email, verificationCode);
+
+    res.status(200).json({ message: "Verification code resent successfully." });
+  } catch (error) {
+    console.log("Error in resend OTP controller: ", error.message);
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
+
 
 const login = async (req, res) => {
   try {
@@ -231,4 +278,5 @@ module.exports = {
   getProfile,
   forgotPassword,
   resetPassword,
+  resentOTP
 };
