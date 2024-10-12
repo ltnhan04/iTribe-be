@@ -20,3 +20,4 @@ router.get('/paginate', verifyAdmin, getPaginatedUser);
 router.post("/ban/:userId", verifyAdmin, banUser);
 router.patch("/unban/:userId", verifyAdmin, unBanUser);
 module.exports = router;
+ 

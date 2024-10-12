@@ -3,7 +3,7 @@ const {
   createReview,
   updateReview,
   deleteReview,
-} = require("../controllers/review.controller");
+} = require("../controllers/review,controller");
 const { verifyToken } = require("../middleware/auth.middleware");
 
 router.post("/", verifyToken, createReview);
