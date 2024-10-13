@@ -41,7 +41,6 @@ const verifySignUp = async (req, res) => {
   const { email, otp } = req.body;
   try {
     const storedData = await redis.get(`signup:${email}`);
-    console.log("Stored data in resentOTP:", storedData);
 
     if (!storedData) {
       return res.status(400).json({ message: "OTP expired or invalid" });
@@ -60,7 +59,7 @@ const verifySignUp = async (req, res) => {
       httpOnly: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
     });
     await storeRefreshToken(user._id, refreshToken);
     res.status(200).json({
