@@ -64,6 +64,7 @@ const verifySignUp = async (req, res) => {
     await storeRefreshToken(user._id, refreshToken);
     res.status(200).json({
       accessToken: accessToken,
+      name: user.name,
       message: "Email verified and user created successfully",
     });
   } catch (error) {
@@ -133,7 +134,9 @@ const login = async (req, res) => {
       });
       await storeRefreshToken(user._id, refreshToken);
 
-      res.status(200).json({ accessToken, message: "Login success" });
+      res
+        .status(200)
+        .json({ accessToken, name: user.name, message: "Login success" });
     } else {
       res.status(400).json({ message: "Invalid email or password" });
     }
