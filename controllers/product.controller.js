@@ -3,13 +3,13 @@ const Product = require("../models/product.model");
 const getAllProductsUser = async (_, res) => {
   try {
     const products = await Product.find({ status: "active" }).populate(
-      "variants",
-      "reviews"
+      "variants reviews"
     );
     const data = products.map((product) => ({
       _id: product._id,
       price: product.price,
       category: product.category,
+      colors: [...new Set(product.variants.map((variant) => variant.color))],
       image: product.images.length > 0 ? product.images[0] : null,
       rating: product.rating,
       status: product.status,
