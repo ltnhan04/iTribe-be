@@ -1,12 +1,38 @@
 const Order = require("../../models/order.model");
 
-const getAllOrders = async (_, res) => {
+
+const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate("user products.product");
-    if (!orders) {
-      return res.status(404).json({ message: "No orders found" });
+    const orders = await Order.find()
+      .populate("user", "name")
+      .populate("products.product", "name color storage");
+
+    if (orders.length === 0) {
+      return res.status(404).json({ message: "No orders found." });
     }
-    res.status(200).json({ orders });
+
+    const response = orders.map(order => ({
+      orderId: order._id,
+      user: {
+        id: order.user._id,
+        name: order.user.name,
+      },
+      products: order.products.map(item => ({
+        productId: item.product._id,
+        productName: item.product.name,
+        productColor: item.product.color,
+        productStorage: item.product.storage,
+        quantity: item.quantity,
+      })),
+      totalAmount: order.totalAmount,
+      status: order.status,
+      shippingAddress: order.shippingAddress,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    }));
+
+    res.status(200).json({ orders: response });
   } catch (error) {
     console.log("Error in getAllOrders controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
