@@ -27,7 +27,11 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://i-tribe.vercel.app"],
+  origin: [
+    "http://localhost:3000",
+    "https://i-tribe.vercel.app",
+    "http://localhost:5173",
+  ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
 };
