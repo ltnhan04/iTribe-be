@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const orderSchema = new mongoose.Schema(
   {
     user: {
@@ -8,7 +9,7 @@ const orderSchema = new mongoose.Schema(
     },
     products: [
       {
-        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "ProductVariant" }, 
         quantity: { type: Number, required: true },
       },
     ],
@@ -38,4 +39,5 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
 module.exports = mongoose.model("Order", orderSchema);
