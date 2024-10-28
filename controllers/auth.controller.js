@@ -122,9 +122,13 @@ const resentOTP = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role = "user" } = req.body;
     const user = await User.findOne({ email });
     if (user && (await user.comparePassword(password))) {
+      if (user.role !== role) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
       const { accessToken, refreshToken } = generateToken(user._id);
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
