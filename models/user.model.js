@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema(
     active :{
       type: Boolean,
       enum: ["true", "false"],
-      default: false,
+      default: true,
     }
     ,
     orderHistory: [
