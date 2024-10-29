@@ -74,7 +74,11 @@ const createProduct = async (req, res) => {
     if (!savedProduct) {
       return res.status(400).json({ message: "Failed to create product" });
     }
-    res.status(201).json({ message: "Product created successfully!", product });
+
+    const productData = savedProduct.toObject();
+    res
+      .status(201)
+      .json({ message: "Product created successfully!", product: productData });
   } catch (error) {
     console.error("Error in createProduct:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
