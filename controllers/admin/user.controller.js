@@ -14,7 +14,7 @@ const getPaginatedUser = async (req, res) => {
 
 const getAllUser = async (req, res) => {
   try {
-    const users = await User.find().select('_id name email phoneNumber role');
+    const users = await User.find().select('_id name email phoneNumber role active');
     if (!users.length) {  // Corrected check for no users found
       return res.status(404).json({ message: "No users found!" });
     }
