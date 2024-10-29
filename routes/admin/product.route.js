@@ -25,19 +25,8 @@ router.put("/:id", verifyAdmin, upload.array("images", 5), updateProduct);
 router.delete("/:id", verifyAdmin, deleteProduct);
 //variants
 router.get("/variant/:productId", getAllProductVariants);
-router.post(
-  "/variant",
-  verifyAdmin,
-  upload.single("image"),
-  createProductVariant
-);
-router.put(
-  "/variant/:variantId",
-  verifyAdmin,
-  upload.single("image"),
-  updateProductVariant
-);
-
+router.post( "/variant",verifyAdmin,upload.single("image"),createProductVariant);
+router.put("/variant/:variantId", verifyAdmin,upload.single("image"), updateProductVariant);
 router.delete("/variant/:variantId", verifyAdmin, deleteProductVariant);
 
 module.exports = router;
