@@ -12,8 +12,14 @@ const productVariantSchema = new mongoose.Schema(
       required: true,
     },
     color: {
-      type: String,
-      required: true,
+      colorName: {
+        type: String,
+        required: true,
+      },
+      colorCode: {
+        type: String,
+        required: true,
+      },
     },
     storage: {
       type: String,

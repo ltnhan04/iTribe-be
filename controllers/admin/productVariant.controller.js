@@ -18,7 +18,16 @@ const getAllProductVariants = async (req, res) => {
 
 const createProductVariant = async (req, res) => {
   try {
-    const { productId, color, storage, price, stock, name, slug } = req.body;
+    const {
+      productId,
+      colorName,
+      colorCode,
+      storage,
+      price,
+      stock,
+      name,
+      slug,
+    } = req.body;
 
     const product = await Product.findById(productId);
     if (!product) {
@@ -32,11 +41,11 @@ const createProductVariant = async (req, res) => {
 
     const productVariant = new ProductVariant({
       productId,
-      color,
+      name,
+      color: { colorName, colorCode },
       storage,
       price,
       stock,
-      name,
       slug,
       image: imageUrls,
     });
@@ -52,9 +61,11 @@ const createProductVariant = async (req, res) => {
     product.variants.push(productVariant._id);
     await product.save();
 
+    const productVariantData = savedProductVariant.toObject();
+
     res.status(201).json({
       message: "Product variant created successfully!",
-      data: productVariant,
+      productVariant: productVariantData,
     });
   } catch (error) {
     console.log("Error in createProductVariant controller:", error.message);
