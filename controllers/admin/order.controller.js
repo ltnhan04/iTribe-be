@@ -1,7 +1,7 @@
 const Order = require("../../models/order.model");
 
 
-const getAllOrders = async (req, res) => {
+const getAllOrders = async (_, res) => {
   try {
     const orders = await Order.find()
       .populate("user", "name")
