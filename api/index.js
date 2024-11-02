@@ -2,7 +2,6 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const serverless = require("serverless-http");
 const connectDB = require("../libs/db");
 
 // Customer routes
@@ -59,4 +58,4 @@ app.get("/", (_, res) => {
 
 connectDB();
 
-module.exports = serverless(app);
+module.exports = app;
