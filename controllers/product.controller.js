@@ -8,7 +8,7 @@ const getAllProductsUser = async (_, res) => {
     const data = products.map((product) => ({
       _id: product._id,
       price: product.price,
-      category: product.category,
+      name: product.name,
       colors: [...new Set(product.variants.map((variant) => variant.color))],
       image: product.images.length > 0 ? product.images[0] : null,
       rating: product.rating,
@@ -46,7 +46,7 @@ const getRecommendedProducts = async (_, res) => {
           images: 1,
           _id: 1,
           price: 1,
-          category: 1,
+          name: 1,
           rating: 1,
           status: 1,
           variants: 1,
@@ -59,13 +59,13 @@ const getRecommendedProducts = async (_, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-const getProductByCategory = async (req, res) => {
-  const { category } = req.params;
+const getProductByName = async (req, res) => {
+  const { name } = req.params;
   try {
-    const products = await Product.find({ category });
+    const products = await Product.find({ name });
     res.status(200).json({ products });
   } catch (error) {
-    console.log("Error in getProductByCategory controller", error.message);
+    console.log("Error in getProductByName controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
@@ -127,7 +127,7 @@ const getPaginatedProducts = async (req, res) => {
 module.exports = {
   getAllProductsUser,
   getProductById,
-  getProductByCategory,
+  getProductByName,
   getRecommendedProducts,
   searchProducts,
   getProductByPriceRange,

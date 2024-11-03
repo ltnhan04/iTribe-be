@@ -35,8 +35,8 @@ const createProductVariant = async (req, res) => {
     }
 
     let imageUrls = [];
-    if (req.file) {
-      imageUrls = await uploadImage(req.file);
+    if (req.files && req.files.length > 0) {
+      imageUrls = await uploadImage(req.files);
     }
 
     const productVariant = new ProductVariant({
@@ -47,32 +47,32 @@ const createProductVariant = async (req, res) => {
       price,
       stock,
       slug,
-      image: imageUrls,
+      images: imageUrls,
     });
 
     const savedProductVariant = await productVariant.save();
-
     if (!savedProductVariant) {
       return res
         .status(400)
         .json({ message: "Failed to create product variant" });
     }
 
-    product.variants.push(productVariant._id);
-    await product.save();
+    product.variants.push(savedProductVariant._id);
 
-    const productVariantData = savedProductVariant.toObject();
+    if (!product.image && imageUrls.length > 0) {
+      product.image = imageUrls[0];
+    }
+    await product.save();
 
     res.status(201).json({
       message: "Product variant created successfully!",
-      productVariant: productVariantData,
+      productVariant: savedProductVariant,
     });
   } catch (error) {
     console.log("Error in createProductVariant controller:", error.message);
-    res.status(500).json({ message: "Server Error!" });
+    res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-
 const updateProductVariant = async (req, res) => {
   try {
     const { variantId } = req.params;
@@ -80,20 +80,20 @@ const updateProductVariant = async (req, res) => {
       return res.status(400).json({ message: "Variant ID is required" });
     }
 
-    let imageUrls;
-    if (req.file) {
+    let imageUrls = [];
+    if (req.files && req.files.length > 0) {
       const productVariant = await ProductVariant.findById(variantId);
       if (!productVariant) {
         return res.status(404).json({ message: "Product variant not found" });
       }
-      if (productVariant.image) {
-        await deleteImage(productVariant.image);
+      if (productVariant.images) {
+        await deleteImage(productVariant.images);
       }
-      imageUrls = await uploadImage(req.file);
+      imageUrls = await uploadImage(req.files);
     }
 
     const updates = { ...req.body };
-    if (imageUrls) updates.image = imageUrls;
+    if (imageUrls) updates.images = imageUrls;
 
     const updatedProductVariant = await ProductVariant.findByIdAndUpdate(
       variantId,
@@ -120,17 +120,27 @@ const deleteProductVariant = async (req, res) => {
 
   try {
     const productVariant = await ProductVariant.findById(variantId);
-
     if (!productVariant) {
       return res.status(404).json({ message: "Product variant not found" });
     }
 
     const productId = productVariant.productId;
+    const product = await Product.findById(productId);
 
     await ProductVariant.findByIdAndDelete(variantId);
     await Product.findByIdAndUpdate(productId, {
       $pull: { variants: variantId },
     });
+
+    if (product.image === productVariant.images[0]) {
+      const newVariant = await ProductVariant.findOne({ productId });
+      if (newVariant && newVariant.images.length > 0) {
+        product.image = newVariant.images[0];
+      } else {
+        product.image = null;
+      }
+      await product.save();
+    }
 
     res.status(200).json({ message: "Product variant deleted successfully!" });
   } catch (error) {
