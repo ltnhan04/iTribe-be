@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   getAllProductsUser,
   getProductById,
-  getProductByCategory,
+  getProductByName,
   getRecommendedProducts,
   getPaginatedProducts,
   searchProducts,
@@ -13,7 +13,7 @@ const {
 
 router.get("/", getAllProductsUser);
 router.get("/recommendations", getRecommendedProducts);
-router.get("/category/:category", getProductByCategory);
+router.get("/name/:name", getProductByName);
 
 router.get("/search", searchProducts);
 router.get("/range", getProductByPriceRange);
