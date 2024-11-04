@@ -58,7 +58,7 @@ const verifySignUp = async (req, res) => {
       httpOnly: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: true,
+      secure: false,
     });
     await storeRefreshToken(user._id, refreshToken);
     res.status(200).json({
@@ -86,7 +86,7 @@ const login = async (req, res) => {
         httpOnly: true,
         sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: true,
+        secure: false,
       });
       await storeRefreshToken(user._id, refreshToken);
 
@@ -194,7 +194,7 @@ const refreshToken = async (req, res) => {
       httpOnly: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: true,
+      secure: false,
     });
     res
       .status(200)
@@ -261,7 +261,6 @@ const resetPassword = async (req, res) => {
     }
 
     const parsedData = JSON.parse(userData);
-    console.log("Parsed data:", parsedData);
 
     const { userId } = parsedData;
     if (!userId) {
