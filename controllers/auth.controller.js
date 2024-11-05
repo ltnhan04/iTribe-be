@@ -56,7 +56,7 @@ const verifySignUp = async (req, res) => {
     const { accessToken, refreshToken } = generateToken(user._id);
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       path: "/",
       sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -85,7 +85,7 @@ const login = async (req, res) => {
       const { accessToken, refreshToken } = generateToken(user._id);
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         path: "/",
         sameSite: "None",
         maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -194,7 +194,7 @@ const refreshToken = async (req, res) => {
     await storeRefreshToken(decoded.userId, newRefreshToken);
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       path: "/",
       sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -255,7 +255,6 @@ const resetPassword = async (req, res) => {
     const { password } = req.body;
 
     const userData = await redis.get(`resetpassword:${token}`);
-    console.log("Redis data:", userData);
 
     if (!userData) {
       return res
