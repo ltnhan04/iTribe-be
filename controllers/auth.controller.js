@@ -56,7 +56,8 @@ const verifySignUp = async (req, res) => {
     const { accessToken, refreshToken } = generateToken(user._id);
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === "production",
     });
@@ -84,10 +85,12 @@ const login = async (req, res) => {
       const { accessToken, refreshToken } = generateToken(user._id);
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
         secure: process.env.NODE_ENV === "production",
       });
+
       await storeRefreshToken(user._id, refreshToken);
 
       res
@@ -190,9 +193,10 @@ const refreshToken = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
     await storeRefreshToken(decoded.userId, newRefreshToken);
-    res.cookie("refreshToken", newRefreshToken, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === "production",
     });
