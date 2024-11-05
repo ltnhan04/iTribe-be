@@ -56,9 +56,10 @@ const verifySignUp = async (req, res) => {
     const { accessToken, refreshToken } = generateToken(user._id);
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
+      secure: true,
+      path: "/",
+      sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: false,
     });
     await storeRefreshToken(user._id, refreshToken);
     res.status(200).json({
@@ -84,9 +85,10 @@ const login = async (req, res) => {
       const { accessToken, refreshToken } = generateToken(user._id);
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        sameSite: "strict",
+        secure: true,
+        path: "/",
+        sameSite: "None",
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: false,
       });
       await storeRefreshToken(user._id, refreshToken);
 
@@ -183,7 +185,7 @@ const refreshToken = async (req, res) => {
     const accessToken = jwt.sign(
       { userId: decoded.userId },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15s" }
     );
     const newRefreshToken = jwt.sign(
       { userId: decoded.userId },
@@ -192,9 +194,10 @@ const refreshToken = async (req, res) => {
     await storeRefreshToken(decoded.userId, newRefreshToken);
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      sameSite: "strict",
+      secure: true,
+      path: "/",
+      sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: false,
     });
     res
       .status(200)
