@@ -172,6 +172,7 @@ const resentOTP = async (req, res) => {
 const refreshToken = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
+    console.log(refreshToken);
     if (!refreshToken) {
       return res.status(401).json({ message: "No refresh token provided" });
     }
@@ -193,7 +194,7 @@ const refreshToken = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
     await storeRefreshToken(decoded.userId, newRefreshToken);
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       path: "/",
