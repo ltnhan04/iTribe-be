@@ -1,26 +1,30 @@
 const Order = require("../../models/order.model");
 
-
 const getAllOrders = async (_, res) => {
   try {
     const orders = await Order.find()
-      .populate("user", "name")
+      .populate({ path: "user", select: "name", match: { _id: { $ne: null } } })
       .populate("products.product", "name color storage");
 
-    if (orders.length === 0) {
+    const filteredOrders = orders.filter(
+      (order) => order.user && order.products.every((item) => item.product)
+    );
+
+    if (filteredOrders.length === 0) {
       return res.status(404).json({ message: "No orders found." });
     }
 
-    const response = orders.map(order => ({
+    const response = filteredOrders.map((order) => ({
       orderId: order._id,
       user: {
         id: order.user._id,
         name: order.user.name,
       },
-      products: order.products.map(item => ({
+      products: order.products.map((item) => ({
         productId: item.product._id,
         productName: item.product.name,
-        productColor: item.product.color,
+        productColorName: item.product.color?.colorName,
+        productColorCode: item.product.color?.colorCode,
         productStorage: item.product.storage,
         quantity: item.quantity,
       })),
