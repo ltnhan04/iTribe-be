@@ -22,11 +22,12 @@ const getAllProductsAdmin = async (_, res) => {
           productId: product._id,
         });
         const price = firstVariant ? firstVariant.price : 0;
+        const firstProduct = firstVariant ? firstVariant.images[0] : null;
 
         return {
           _id: product._id,
           name: product.name,
-          image: product.image,
+          image: firstProduct,
           rating: avgRating,
           price,
           status: product.status,
