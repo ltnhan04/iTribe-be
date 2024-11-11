@@ -1,19 +1,40 @@
 const Product = require("../models/product.model");
+const ProductVariant = require("../models/productVariant.model");
 
 const getAllProductsUser = async (_, res) => {
   try {
-    const products = await Product.find({ status: "active" }).populate(
-      "variants reviews"
+    const products = await Product.find({}).populate("variants");
+
+    const data = await Promise.all(
+      products.map(async (product) => {
+        const firstVariant = await ProductVariant.findOne({
+          productId: product._id,
+        });
+
+        const price = firstVariant ? firstVariant.price : 0;
+        const firstImage =
+          firstVariant && firstVariant.images && firstVariant.images.length > 0
+            ? firstVariant.images[0]
+            : null;
+
+        return {
+          _id: product._id,
+          price,
+          name: product.name,
+          colors: [
+            ...new Set(product.variants.map((variant) => variant.color)),
+          ],
+          image:
+            firstImage ||
+            (product.image && product.image.length > 0
+              ? product.image[0]
+              : null),
+          rating: product.rating || 0,
+          status: product.status,
+        };
+      })
     );
-    const data = products.map((product) => ({
-      _id: product._id,
-      price: product.price,
-      name: product.name,
-      colors: [...new Set(product.variants.map((variant) => variant.color))],
-      image: product.images.length > 0 ? product.images[0] : null,
-      rating: product.rating,
-      status: product.status,
-    }));
+
     res.status(200).json({ data });
   } catch (error) {
     console.log("Error in getAllProductsUser controller", error.message);
