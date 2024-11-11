@@ -25,7 +25,7 @@ router.get("/:id", verifyAdmin, getProductDetailsAdmin);
 router.post("/", verifyAdmin, createProduct);
 router.put("/:id", verifyAdmin, upload.single("image"), updateProduct);
 router.delete("/:id", verifyAdmin, deleteProduct);
-
+//variant
 router.get("/variant/:productId", getAllProductVariants);
 
 router.post(
