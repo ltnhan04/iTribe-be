@@ -31,6 +31,7 @@ const getAllProductsUser = async (_, res) => {
               ? product.image[0]
               : null),
           status: product.status,
+          slug: product.slug,
         };
       })
     );
@@ -133,6 +134,7 @@ const getProductByName = async (req, res) => {
               ? product.image[0]
               : null),
           status: product.status,
+          slug: product.slug,
         };
       })
     );
