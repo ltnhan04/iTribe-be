@@ -96,18 +96,48 @@ const getRecommendedProducts = async (_, res) => {
 };
 const getProductByName = async (req, res) => {
   let { name } = req.params;
-
   name = name.trim();
 
   try {
     const products = await Product.find({
       name: new RegExp(`^${name}$`, "i"),
-    });
+    }).populate("variants");
 
-    if (products.length > 0) {
-      return res.status(200).json({ products });
+    if (products.length === 0) {
+      return res.status(404).json({ message: "Product not found" });
     }
-    res.status(404).json({ message: "Product not found" });
+
+    const data = await Promise.all(
+      products.map(async (product) => {
+        const firstVariant = await ProductVariant.findOne({
+          productId: product._id,
+        });
+
+        const price = firstVariant ? firstVariant.price : 0;
+        const firstImage =
+          firstVariant?.images?.length > 0 ? firstVariant.images[0] : null;
+
+        return {
+          _id: product._id,
+          price,
+          name: product.name,
+          colors: [
+            ...new Set(product.variants.map((variant) => variant.color)),
+          ],
+          storages: [
+            ...new Set(product.variants.map((variant) => variant.storage)),
+          ],
+          image:
+            firstImage ||
+            (product.image && product.image.length > 0
+              ? product.image[0]
+              : null),
+          status: product.status,
+        };
+      })
+    );
+
+    res.status(200).json({ data });
   } catch (error) {
     console.log("Error in getProductByName controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
