@@ -12,12 +12,6 @@ const getAllProductsAdmin = async (_, res) => {
 
     const data = await Promise.all(
       products.map(async (product) => {
-        const avgRating =
-          product.reviews.length > 0
-            ? product.reviews.reduce((acc, review) => acc + review.rating, 0) /
-              product.reviews.length
-            : 0;
-
         const firstVariant = await ProductVariant.findOne({
           productId: product._id,
         });
@@ -28,7 +22,6 @@ const getAllProductsAdmin = async (_, res) => {
           _id: product._id,
           name: product.name,
           image: firstProduct,
-          rating: avgRating,
           price,
           status: product.status,
         };
@@ -52,7 +45,7 @@ const getProductDetailsAdmin = async (req, res) => {
   }
 
   try {
-    const product = await Product.findById(id).populate("variants reviews");
+    const product = await Product.findById(id).populate("variants");
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });

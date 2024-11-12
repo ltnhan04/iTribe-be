@@ -13,9 +13,7 @@ const getAllProductsUser = async (_, res) => {
 
         const price = firstVariant ? firstVariant.price : 0;
         const firstImage =
-          firstVariant && firstVariant.images && firstVariant.images.length > 0
-            ? firstVariant.images[0]
-            : null;
+          firstVariant?.images?.length > 0 ? firstVariant.images[0] : null;
 
         return {
           _id: product._id,
@@ -24,12 +22,14 @@ const getAllProductsUser = async (_, res) => {
           colors: [
             ...new Set(product.variants.map((variant) => variant.color)),
           ],
+          storages: [
+            ...new Set(product.variants.map((variant) => variant.storage)),
+          ],
           image:
             firstImage ||
             (product.image && product.image.length > 0
               ? product.image[0]
               : null),
-          rating: product.rating || 0,
           status: product.status,
         };
       })
@@ -46,18 +46,32 @@ const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
-      res.status(400).json({ message: "Product ID is required" });
+      return res.status(400).json({ message: "Product ID is required" });
     }
-    const product = await Product.findById(id).populate("variants reviews");
+
+    const product = await Product.findById(id).populate({
+      path: "variants",
+      populate: {
+        path: "reviews",
+        model: "Review",
+        populate: {
+          path: "user",
+          model: "User",
+        },
+      },
+    });
+
     if (!product) {
-      res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({ message: "Product not found" });
     }
+
     res.status(200).json({ product });
   } catch (error) {
     console.log("Error in getProductById controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
 const getRecommendedProducts = async (_, res) => {
   try {
     const products = await Product.aggregate([

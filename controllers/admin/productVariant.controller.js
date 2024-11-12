@@ -9,7 +9,36 @@ const getAllProductVariants = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    res.status(200).json({ variants: product.variants });
+
+    const variantsWithRatings = await ProductVariant.aggregate([
+      { $match: { productId: mongoose.Types.ObjectId(productId) } },
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "productId",
+          as: "reviews",
+        },
+      },
+      {
+        $addFields: {
+          averageRating: {
+            $cond: {
+              if: { $gt: [{ $size: "$reviews" }, 0] },
+              then: { $avg: "$reviews.rating" },
+              else: 0,
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          reviews: 0,
+        },
+      },
+    ]);
+
+    res.status(200).json({ variants: variantsWithRatings });
   } catch (error) {
     console.log("Error in getAllProductVariants controller:", error.message);
     res.status(500).json({ message: "Server Error!" });

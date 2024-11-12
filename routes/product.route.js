@@ -12,6 +12,7 @@ const {
 } = require("../controllers/product.controller");
 
 router.get("/", getAllProductsUser);
+router.get("/:id", getProductById);
 router.get("/recommendations", getRecommendedProducts);
 router.get("/name/:name", getProductByName);
 
