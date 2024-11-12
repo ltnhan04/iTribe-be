@@ -11,6 +11,10 @@ const productVariantSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    rating: {
+      type: Number,
+      default: 0,
+    },
     color: {
       colorName: {
         type: String,
@@ -39,6 +43,12 @@ const productVariantSchema = new mongoose.Schema(
       unique: true,
     },
     images: { type: [String], required: true },
+    reviews: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Review",
+      },
+    ],
   },
   { timestamps: true }
 );

@@ -14,16 +14,6 @@ const productSchema = new mongoose.Schema(
     image: {
       type: [String],
     },
-    rating: {
-      type: Number,
-      default: 0,
-    },
-    reviews: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Review",
-      },
-    ],
     status: {
       type: String,
       enum: ["active", "inactive"],
