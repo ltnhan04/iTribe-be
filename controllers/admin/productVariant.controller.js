@@ -1,4 +1,5 @@
 const { uploadImage, deleteImage } = require("../../services/upload.services");
+const mongoose = require("mongoose");
 const Product = require("../../models/product.model");
 const ProductVariant = require("../../models/productVariant.model");
 
@@ -10,35 +11,35 @@ const getAllProductVariants = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    const variantsWithRatings = await ProductVariant.aggregate([
-      { $match: { productId: mongoose.Types.ObjectId(productId) } },
-      {
-        $lookup: {
-          from: "reviews",
-          localField: "_id",
-          foreignField: "productId",
-          as: "reviews",
-        },
-      },
-      {
-        $addFields: {
-          averageRating: {
-            $cond: {
-              if: { $gt: [{ $size: "$reviews" }, 0] },
-              then: { $avg: "$reviews.rating" },
-              else: 0,
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          reviews: 0,
-        },
-      },
-    ]);
+    // const variantsWithRatings = await ProductVariant.aggregate([
+    //   { $match: { productId: mongoose.Types.ObjectId(productId) } },
+    //   {
+    //     $lookup: {
+    //       from: "reviews",
+    //       localField: "_id",
+    //       foreignField: "productId",
+    //       as: "reviews",
+    //     },
+    //   },
+    //   {
+    //     $addFields: {
+    //       averageRating: {
+    //         $cond: {
+    //           if: { $gt: [{ $size: "$reviews" }, 0] },
+    //           then: { $avg: "$reviews.rating" },
+    //           else: 0,
+    //         },
+    //       },
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       reviews: 0,
+    //     },
+    //   },
+    // ]);
 
-    res.status(200).json({ variants: variantsWithRatings });
+    res.status(200).json({ variants: product });
   } catch (error) {
     console.log("Error in getAllProductVariants controller:", error.message);
     res.status(500).json({ message: "Server Error!" });
