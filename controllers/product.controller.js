@@ -95,10 +95,19 @@ const getRecommendedProducts = async (_, res) => {
   }
 };
 const getProductByName = async (req, res) => {
-  const { name } = req.params;
+  let { name } = req.params;
+
+  name = name.trim();
+
   try {
-    const products = await Product.find({ name });
-    res.status(200).json({ products });
+    const products = await Product.find({
+      name: new RegExp(`^${name}$`, "i"),
+    });
+
+    if (products.length > 0) {
+      return res.status(200).json({ products });
+    }
+    res.status(404).json({ message: "Product not found" });
   } catch (error) {
     console.log("Error in getProductByName controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
