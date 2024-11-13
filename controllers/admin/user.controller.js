@@ -12,7 +12,7 @@ const getPaginatedUser = async (req, res) => {
   }
 };
 
-const getAllUser = async (req, res) => {
+const getAllUser = async (_, res) => {
   try {
     const users = await User.find().select(
       "_id name email phoneNumber role active"

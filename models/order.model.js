@@ -7,9 +7,12 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    products: [
+    productVariants: [
       {
-        product: { type: mongoose.Schema.Types.ObjectId, ref: "ProductVariant" }, 
+        productVariant: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "ProductVariant",
+        },
         quantity: { type: Number, required: true },
       },
     ],
