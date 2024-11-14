@@ -19,16 +19,18 @@ const signUp = async (req, res) => {
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
+
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
+    const createdAt = Date.now();
+
     await redis.set(
       `signup:${email}`,
-      JSON.stringify({ name, password, verificationCode }),
+      JSON.stringify({ name, password, verificationCode, createdAt }),
       "EX",
-      60
+      300
     );
 
     await sendVerificationEmail(email, verificationCode);
-
     res.status(200).json({ message: "Check your email for the OTP" });
   } catch (error) {
     console.log("Error in signup controller: ", error.message);
@@ -40,16 +42,22 @@ const verifySignUp = async (req, res) => {
   const { email, otp } = req.body;
   try {
     const storedData = await redis.get(`signup:${email}`);
-
     if (!storedData) {
-      return res.status(400).json({ message: "OTP expired or invalid" });
+      return res.status(400).json({ message: "OTP didn't exist" });
     }
 
-    const { name, password, verificationCode } = JSON.parse(storedData);
+    const { name, password, verificationCode, createdAt } =
+      JSON.parse(storedData);
+    const timeElapsed = (Date.now() - createdAt) / 1000;
+
+    if (timeElapsed > 60) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
 
     if (otp !== verificationCode.toString()) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
+
     const user = await User.create({ name, email, password });
     await redis.del(`signup:${email}`);
 
@@ -62,13 +70,61 @@ const verifySignUp = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
     });
     await storeRefreshToken(user._id, refreshToken);
+
     res.status(200).json({
-      accessToken: accessToken,
+      accessToken,
       name: user.name,
       message: "Email verified and user created successfully",
     });
   } catch (error) {
     console.log("Error in verify sign up controller: ", error.message);
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
+
+const resentOTP = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const storedData = await redis.get(`signup:${email}`);
+    if (!storedData) {
+      return res
+        .status(400)
+        .json({ message: "OTP expired or invalid. Please sign up again." });
+    }
+
+    const countKey = `signup:count:${email}`;
+    let resendCount = await redis.get(countKey);
+    resendCount = resendCount ? parseInt(resendCount, 10) : 0;
+
+    if (resendCount > 3) {
+      return res.status(429).json({
+        message:
+          "You have reached the limit for resending OTP. Please try after 10 mins.",
+      });
+    }
+
+    const { name, password } = JSON.parse(storedData);
+
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+    const createdAt = Date.now();
+
+    await redis.set(
+      `signup:${email}`,
+      JSON.stringify({ name, password, verificationCode, createdAt }),
+      "EX",
+      300
+    );
+
+    if (resendCount === 0) {
+      await redis.set(countKey, 1, "EX", 600);
+    } else {
+      await redis.incr(countKey);
+    }
+
+    await sendVerificationEmail(email, verificationCode);
+    res.status(200).json({ message: "Verification code resent successfully." });
+  } catch (error) {
+    console.log("Error in resend OTP controller: ", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
@@ -119,52 +175,6 @@ const logout = async (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.log("Error in logout controller: ", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
-  }
-};
-const resentOTP = async (req, res) => {
-  const { email } = req.body;
-  try {
-    const storedData = await redis.get(`signup:${email}`);
-    if (!storedData) {
-      return res
-        .status(400)
-        .json({ message: "OTP expired or invalid. Please sign up again." });
-    }
-
-    const countKey = `signup:count:${email}`;
-    let resendCount = await redis.get(countKey);
-    resendCount = resendCount ? parseInt(resendCount, 10) : 0;
-
-    if (resendCount > 3) {
-      return res.status(429).json({
-        message:
-          "You have reached the limit for resending OTP. Please try after 10 mins.",
-      });
-    }
-
-    const { name, password } = JSON.parse(storedData);
-
-    const verificationCode = Math.floor(100000 + Math.random() * 900000);
-
-    await redis.set(
-      `signup:${email}`,
-      JSON.stringify({ name, password, verificationCode }),
-      "EX",
-      60
-    );
-
-    if (resendCount === 0) {
-      await redis.set(countKey, 1, "EX", 600);
-    } else {
-      await redis.incr(countKey);
-    }
-
-    await sendVerificationEmail(email, verificationCode);
-
-    res.status(200).json({ message: "Verification code resent successfully." });
-  } catch (error) {
-    console.log("Error in resend OTP controller: ", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
