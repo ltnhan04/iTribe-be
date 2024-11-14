@@ -15,7 +15,7 @@ const router = express.Router();
 router.get('/', verifyAdmin, getAllUser);
 router.get("/:userId", verifyAdmin, getUserDetail);
 router.get("/userOrder/:userId", verifyAdmin, getUserOrder);
-router.get("/userOrderDetail/:userId", verifyAdmin, getUserOrderDetail);
+router.get("/productVariantDetail/:productVariantId", verifyAdmin, getUserOrderDetail); 
 router.get('/paginate', verifyAdmin, getPaginatedUser);
 router.post("/ban/:userId", verifyAdmin, banUser);
 router.patch("/unban/:userId", verifyAdmin, unBanUser);
