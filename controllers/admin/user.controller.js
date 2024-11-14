@@ -12,10 +12,12 @@ const getPaginatedUser = async (req, res) => {
   }
 };
 
-const getAllUser = async (req, res) => {
+const getAllUser = async (_, res) => {
   try {
-    const users = await User.find().select('_id name email phoneNumber role active');
-    if (!users.length) {  // Corrected check for no users found
+    const users = await User.find().select(
+      "_id name email phoneNumber role active"
+    );
+    if (!users.length) {
       return res.status(404).json({ message: "No users found!" });
     }
     res.status(200).json(users);
@@ -27,7 +29,9 @@ const getAllUser = async (req, res) => {
 const getUserDetail = async (req, res) => {
   try {
     const { userId } = req.params;
-    const user = await User.findById(userId).select('_id name email phoneNumber role orderHistory active');
+    const user = await User.findById(userId).select(
+      "_id name email phoneNumber role orderHistory active"
+    );
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -36,7 +40,7 @@ const getUserDetail = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
-}
+
 const getUserOrder = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -51,6 +55,7 @@ const getUserOrder = async (req, res) => {
           select: 'name price color stock',  // Include the fields you want from ProductVariant
         },
       });
+
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -80,11 +85,13 @@ const getUserOrderDetail = async (req, res) => {
       select: 'name price ', 
     });
 
+
     if (!productVariant) {
       return res.status(404).json({ message: "Product variant not found" });
     }
 
     res.status(200).json({ productVariant });
+
   } catch (error) {
     console.error("Error fetching product variant details:", error);
     res.status(500).json({ message: "Server Error!", error: error.message });
@@ -93,19 +100,20 @@ const getUserOrderDetail = async (req, res) => {
 
 const banUser = async (req, res) => {
   try {
-    const { userId } = req.params; // Get userId from the request parameters
+    const { userId } = req.params;
 
-    // Find the user by ID
     const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.active = false; // Assuming `active` is the field that denotes banning
+    user.active = false;
     await user.save();
 
-    res.status(200).json({ message: "User has been banned successfully", user });
+    res
+      .status(200)
+      .json({ message: "User has been banned successfully", user });
   } catch (error) {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
@@ -113,18 +121,19 @@ const banUser = async (req, res) => {
 
 const unBanUser = async (req, res) => {
   try {
-    const { userId } = req.params; 
+    const { userId } = req.params;
     const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.active = true; // Set active to true to unban the user
+    user.active = true;
     await user.save();
 
-    // Make sure to return the correct field names in the response
-    res.status(200).json({ message: "User has been unbanned successfully", user });
+    res
+      .status(200)
+      .json({ message: "User has been unbanned successfully", user });
   } catch (error) {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }

@@ -2,12 +2,11 @@ const redis = require("../libs/redis");
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const bcrypt = require("bcryptjs");
 const {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendResetSuccessEmail,
-} = require("../services/mailtrap/email");
+} = require("../services/nodemailer/email");
 const {
   generateToken,
   storeRefreshToken,
@@ -57,9 +56,10 @@ const verifySignUp = async (req, res) => {
     const { accessToken, refreshToken } = generateToken(user._id);
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
     });
     await storeRefreshToken(user._id, refreshToken);
     res.status(200).json({
@@ -73,6 +73,55 @@ const verifySignUp = async (req, res) => {
   }
 };
 
+const login = async (req, res) => {
+  try {
+    const { email, password, role = "user" } = req.body;
+    const user = await User.findOne({ email });
+    if (user && (await user.comparePassword(password))) {
+      if (user.role !== role) {
+        return res.status(403).json({ message: "Access denied - Admin only" });
+      }
+
+      const { accessToken, refreshToken } = generateToken(user._id);
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      await storeRefreshToken(user._id, refreshToken);
+
+      res
+        .status(200)
+        .json({ accessToken, name: user.name, message: "Login success" });
+    } else {
+      res.status(400).json({ message: "Invalid email or password" });
+    }
+  } catch (error) {
+    console.log("Error in login controller: ", error.message);
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+      );
+      await redis.del(`refresh_token:${decoded.userId}`);
+    }
+    res.clearCookie("refreshToken");
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log("Error in logout controller: ", error.message);
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
 const resentOTP = async (req, res) => {
   const { email } = req.body;
   try {
@@ -120,57 +169,10 @@ const resentOTP = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
-  try {
-    const { email, password, role = "user" } = req.body;
-    const user = await User.findOne({ email });
-    if (user && (await user.comparePassword(password))) {
-      if (user.role !== role) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      const { accessToken, refreshToken } = generateToken(user._id);
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: true,
-      });
-      await storeRefreshToken(user._id, refreshToken);
-
-      res
-        .status(200)
-        .json({ accessToken, name: user.name, message: "Login success" });
-    } else {
-      res.status(400).json({ message: "Invalid email or password" });
-    }
-  } catch (error) {
-    console.log("Error in login controller: ", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
-  }
-};
-
-const logout = async (req, res) => {
-  try {
-    const refreshToken = req.cookies.refreshToken;
-    if (refreshToken) {
-      const decoded = jwt.verify(
-        refreshToken,
-        process.env.REFRESH_TOKEN_SECRET
-      );
-      await redis.del(`refresh_token:${decoded.userId}`);
-    }
-    res.clearCookie("refreshToken");
-    res.status(200).json({ message: "Logged out successfully" });
-  } catch (error) {
-    console.log("Error in logout controller: ", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
-  }
-};
-
 const refreshToken = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
+    console.log(refreshToken);
     if (!refreshToken) {
       return res.status(401).json({ message: "No refresh token provided" });
     }
@@ -185,7 +187,7 @@ const refreshToken = async (req, res) => {
     const accessToken = jwt.sign(
       { userId: decoded.userId },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "30m" }
     );
     const newRefreshToken = jwt.sign(
       { userId: decoded.userId },
@@ -194,9 +196,10 @@ const refreshToken = async (req, res) => {
     await storeRefreshToken(decoded.userId, newRefreshToken);
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
     });
     res
       .status(200)
@@ -209,8 +212,21 @@ const refreshToken = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-    res.status(200).json(req.user);
+    const user = await User.findById(req.user._id).populate({
+      path: "orderHistory",
+      populate: {
+        path: "productVariants.productVariant",
+        select: "name color storage price",
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user);
   } catch (error) {
+    console.log("Error in getProfile controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
@@ -254,7 +270,6 @@ const resetPassword = async (req, res) => {
     const { password } = req.body;
 
     const userData = await redis.get(`resetpassword:${token}`);
-    console.log("Redis data:", userData);
 
     if (!userData) {
       return res
@@ -263,7 +278,6 @@ const resetPassword = async (req, res) => {
     }
 
     const parsedData = JSON.parse(userData);
-    console.log("Parsed data:", parsedData);
 
     const { userId } = parsedData;
     if (!userId) {
@@ -279,8 +293,6 @@ const resetPassword = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    // const salt = await bcrypt.genSalt(10);
-    // const hashedPassword = await bcrypt.hash(password, salt);
     user.password = password;
     await user.save();
 

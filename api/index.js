@@ -2,26 +2,25 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const connectDB = require("./libs/db");
+const connectDB = require("../libs/db");
 
 // Customer routes
-const authRoutes = require("./routes/auth.route");
-const productRoutes = require("./routes/product.route");
-const ordersRoutes = require("./routes/order.route");
-const promotionRoutes = require("./routes/promotion.route");
-const reviewRoutes = require("./routes/review.route");
+const authRoutes = require("../routes/auth.route");
+const productRoutes = require("../routes/product.route");
+const ordersRoutes = require("../routes/order.route");
+const promotionRoutes = require("../routes/promotion.route");
+const reviewRoutes = require("../routes/review.route");
 
 // Admin routes
-const productRoutesAdmin = require("./routes/admin/product.route");
-const userRoutesAdmin = require("./routes/admin/user.route");
-const orderRouteAdmin = require("./routes/admin/order.route");
-const promotionRoutesAdmin = require("./routes/admin/promotion.route");
-const reviewRoutesAdmin = require("./routes/admin/review.route");
-const revenueRoutesAdmin = require("./routes/admin/revenue.route");
+const productRoutesAdmin = require("../routes/admin/product.route");
+const userRoutesAdmin = require("../routes/admin/user.route");
+const orderRouteAdmin = require("../routes/admin/order.route");
+const promotionRoutesAdmin = require("../routes/admin/promotion.route");
+const reviewRoutesAdmin = require("../routes/admin/review.route");
+const revenueRoutesAdmin = require("../routes/admin/revenue.route");
 
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
@@ -58,7 +57,6 @@ app.get("/", (_, res) => {
   res.send("Hello World!");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  connectDB();
-});
+connectDB();
+
+module.exports = app;

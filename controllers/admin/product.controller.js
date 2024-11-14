@@ -4,24 +4,29 @@ const ProductVariant = require("../../models/productVariant.model");
 
 const getAllProductsAdmin = async (_, res) => {
   try {
-    const products = await Product.find({}).populate("reviews");
+    const products = await Product.find({}).populate("variants");
+
     if (!products.length) {
-      res.status(404).json({ message: "No products found" });
+      return res.status(404).json({ message: "No products found" });
     }
-    const data = products.map((product) => {
-      const avgRating =
-        product.reviews.length > 0
-          ? product.reviews.reduce((acc, review) => acc + review.rating, 0)
-          : 0;
-      return {
-        _id: product._id,
-        price: product.price,
-        category: product.category,
-        image: product.images.length > 0 ? product.images[0] : null,
-        rating: avgRating,
-        status: product.status,
-      };
-    });
+
+    const data = await Promise.all(
+      products.map(async (product) => {
+        const firstVariant = await ProductVariant.findOne({
+          productId: product._id,
+        });
+        const price = firstVariant ? firstVariant.price : 0;
+        const firstProduct = firstVariant ? firstVariant.images[0] : null;
+
+        return {
+          _id: product._id,
+          name: product.name,
+          image: firstProduct,
+          price,
+          status: product.status,
+        };
+      })
+    );
 
     res.status(200).json({ data });
   } catch (error) {
@@ -40,7 +45,7 @@ const getProductDetailsAdmin = async (req, res) => {
   }
 
   try {
-    const product = await Product.findById(id).populate("variants reviews");
+    const product = await Product.findById(id).populate("variants");
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -54,27 +59,25 @@ const getProductDetailsAdmin = async (req, res) => {
 };
 
 const createProduct = async (req, res) => {
-  const { description, price, category, slug } = req.body;
+  const { description, name, slug } = req.body;
 
   try {
-    let imageUrls = [];
-    if (req.files && req.files.length > 0) {
-      imageUrls = await uploadImage(req.files);
-    }
-
     const product = new Product({
       description,
-      price,
-      category,
-      images: imageUrls,
+      name,
       slug,
+      image: [],
     });
 
     const savedProduct = await product.save();
     if (!savedProduct) {
       return res.status(400).json({ message: "Failed to create product" });
     }
-    res.status(201).json({ message: "Product created successfully!", product });
+
+    res.status(201).json({
+      message: "Product created successfully!",
+      product: savedProduct,
+    });
   } catch (error) {
     console.error("Error in createProduct:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -92,16 +95,16 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    let imageUrls = product.images;
+    let imageUrls = product.image;
 
-    if (req.files && req.files.length > 0) {
-      const newImages = await uploadImage(req.files);
+    if (req.file) {
+      const newImages = await uploadImage(req.file);
       imageUrls = [...imageUrls, ...newImages];
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
-      { ...updates, images: imageUrls },
+      { ...updates, image: imageUrls },
       { new: true }
     );
 
@@ -130,7 +133,7 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    await deleteImage(product.images);
+    await deleteImage(product.image);
 
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {

@@ -1,27 +1,32 @@
 const Order = require("../../models/order.model");
 
-
-const getAllOrders = async (req, res) => {
+const getAllOrders = async (_, res) => {
   try {
     const orders = await Order.find()
-      .populate("user", "name")
-      .populate("products.product", "name color storage");
+      .populate({ path: "user", select: "name", match: { _id: { $ne: null } } })
+      .populate("productVariants.productVariant", "name color storage");
 
-    if (orders.length === 0) {
+    const filteredOrders = orders.filter(
+      (order) =>
+        order.user && order.productVariants.every((item) => item.productVariant)
+    );
+
+    if (filteredOrders.length === 0) {
       return res.status(404).json({ message: "No orders found." });
     }
 
-    const response = orders.map(order => ({
+    const response = filteredOrders.map((order) => ({
       orderId: order._id,
       user: {
         id: order.user._id,
         name: order.user.name,
       },
-      products: order.products.map(item => ({
-        productId: item.product._id,
-        productName: item.product.name,
-        productColor: item.product.color,
-        productStorage: item.product.storage,
+      productVariants: order.productVariants.map((item) => ({
+        productVariantId: item.productVariant._id,
+        productName: item.productVariant.name,
+        productColorName: item.productVariant.color?.colorName,
+        productColorCode: item.productVariant.color?.colorCode,
+        productStorage: item.productVariant.storage,
         quantity: item.quantity,
       })),
       totalAmount: order.totalAmount,
@@ -86,12 +91,40 @@ const deleteOrder = async (req, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
 const getPaginatedOrder = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
-    const orders = await Order.find().skip(skip).limit(parseInt(limit));
-    res.status(200).json({ orders });
+    const orders = await Order.find()
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate({ path: "user", select: "name" })
+      .populate("productVariants.productVariant", "name color storage");
+
+    const response = orders.map((order) => ({
+      orderId: order._id,
+      user: {
+        id: order.user._id,
+        name: order.user.name,
+      },
+      productVariants: order.productVariants.map((item) => ({
+        productVariantId: item.productVariant._id,
+        productName: item.productVariant.name,
+        productColorName: item.productVariant.color?.colorName,
+        productColorCode: item.productVariant.color?.colorCode,
+        productStorage: item.productVariant.storage,
+        quantity: item.quantity,
+      })),
+      totalAmount: order.totalAmount,
+      status: order.status,
+      shippingAddress: order.shippingAddress,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    }));
+
+    res.status(200).json({ orders: response });
   } catch (error) {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
