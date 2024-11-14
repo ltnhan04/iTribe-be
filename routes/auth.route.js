@@ -6,6 +6,7 @@ const {
   refreshToken,
   verifySignUp,
   getProfile,
+  updateProfile,
   forgotPassword,
   resetPassword,
   resentOTP,
@@ -17,6 +18,7 @@ router.post("/signup", signUp);
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/profile", verifyToken, getProfile);
+router.post("/update-profile", verifyToken, updateProfile);
 router.post("/verify-signup", verifySignUp);
 router.post("/resent-otp", resentOTP);
 router.post("/refresh-token", refreshToken);
