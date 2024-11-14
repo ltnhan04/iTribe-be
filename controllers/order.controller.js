@@ -4,8 +4,9 @@ const ProductVariant = require("../models/productVariant.model");
 
 const createOrder = async (req, res) => {
   try {
-    const { productVariants, totalAmount, shippingAddress, paymentMethod } = req.body;
-    
+    const { productVariants, totalAmount, shippingAddress, paymentMethod } =
+      req.body;
+
     if (!productVariants || !productVariants.length) {
       return res.status(400).json({ message: "Product variants are required" });
     }
@@ -28,13 +29,14 @@ const createOrder = async (req, res) => {
       { $push: { orderHistory: savedOrder._id } }
     );
 
-    res.status(201).json({ message: "Order created successfully", order: savedOrder });
+    res
+      .status(201)
+      .json({ message: "Order created successfully", order: savedOrder });
   } catch (error) {
     console.log("Error in createOrder controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-
 
 const getOrdersByUser = async (req, res) => {
   try {
@@ -89,7 +91,7 @@ const cancelOrder = async (req, res) => {
     const order = await Order.findById(orderId)
       .populate("user", "name")
       .populate(
-        "products.product",
+        "productVariants.productVariant",
         "name color.colorName color.colorCode storage price stock slug images"
       );
 
@@ -101,8 +103,10 @@ const cancelOrder = async (req, res) => {
       return res.status(400).json({ message: "Order cannot be cancelled" });
     }
 
-    for (const item of order.products) {
-      const productVariant = await ProductVariant.findById(item.product._id);
+    for (const item of order.productVariants) {
+      const productVariant = await ProductVariant.findById(
+        item.productVariant._id
+      );
       if (productVariant) {
         productVariant.stock += item.quantity;
         await productVariant.save();
@@ -114,7 +118,7 @@ const cancelOrder = async (req, res) => {
 
     res.status(200).json({ message: "Order cancelled successfully", order });
   } catch (error) {
-    console.log("Error in cancelOrder controller", error.message);
+    console.error("Error in cancelOrder controller:", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
