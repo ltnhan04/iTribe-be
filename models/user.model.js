@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema(
       },
       country: {
         type: String,
+        default: "Vietnam",
       },
     },
     role: {
@@ -47,12 +48,11 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    active :{
+    active: {
       type: Boolean,
       enum: ["true", "false"],
       default: true,
-    }
-    ,
+    },
     orderHistory: [
       {
         type: mongoose.Schema.Types.ObjectId,
