@@ -16,7 +16,6 @@ const revenueADay = async (req, res) => {
     const result = await Order.aggregate([
       {
         $match: {
-          // Sử dụng $match
           createdAt: {
             $gte: new Date(today.setHours(0, 0, 0, 0)),
             $lt: new Date(today.setHours(23, 59, 59, 999)),
@@ -25,27 +24,33 @@ const revenueADay = async (req, res) => {
         },
       },
       {
+        $unwind: "$productVariants",
+      },
+      {
         $group: {
-          _id: null,
-          totalSales: { $sum: "$totalAmount" },
+          _id: "$productVariants.productVariant",
+          totalSales: { $sum: { $multiply: ["$productVariants.quantity", "$totalAmount"] } },
           totalOrders: { $sum: 1 },
         },
       },
     ]);
+
     if (result.length > 0) {
-      const { totalSales, totalOrders } = result[0];
       const revenue = new Revenue({
         date: new Date(),
-        totalSales: totalSales || 0,
-        totalOrders: totalOrders || 0,
+        totalSales: result.reduce((acc, curr) => acc + curr.totalSales, 0),
+        totalOrders: result.reduce((acc, curr) => acc + curr.totalOrders, 0),
         week: today.getWeek(),
         month: today.getMonth() + 1,
         year: today.getFullYear(),
+        productVariants: result.map((item) => ({
+          productVariant: item._id,
+          totalSales: item.totalSales,
+          totalOrders: item.totalOrders,
+        })),
       });
       await revenue.save();
-      res
-        .status(200)
-        .json({ message: "Revenue created successfully", revenue });
+      res.status(200).json({ message: "Revenue created successfully", revenue });
     } else {
       res.status(404).json({ message: "No delivered orders found for today" });
     }
@@ -54,67 +59,6 @@ const revenueADay = async (req, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-
-const revenueAWeek = async (_, res) => {
-  try {
-    const result = await Order.aggregate([
-      {
-        $match: {
-          status: "delivered",
-        },
-      },
-      {
-        $group: {
-          _id: {
-            month: { $month: "$createdAt" },
-            year: { $year: "$createdAt" },
-          },
-          totalSales: { $sum: "$totalAmount" },
-          totalOrders: { $sum: 1 },
-        },
-      },
-      {
-        $sort: {
-          "_id.year": 1,
-          "_id.month": 1,
-        },
-      },
-    ]);
-    res.status(200).json({ result });
-  } catch (error) {
-    console.log("Error in revenueAWeek controller", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
-  }
-};
-
-const revenueAYear = async (req, res) => {
-  try {
-    const result = await Order.aggregate([
-      {
-        $match: {
-          status: "delivered",
-        },
-      },
-      {
-        $group: {
-          _id: { year: { $year: "$createdAt" } },
-          totalSales: { $sum: "$totalAmount" },
-          totalOrders: { $sum: 1 },
-        },
-      },
-      {
-        $sort: {
-          "_id.year": 1,
-        },
-      },
-    ]);
-    res.status(200).json({ result });
-  } catch (error) {
-    console.log("Error in revenueAYear controller", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
-  }
-};
-
 const calculateTotalRevenue = async (req, res) => {
   try {
     const result = await Order.aggregate([
@@ -137,10 +81,56 @@ const calculateTotalRevenue = async (req, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+const revenueByProduct = async (req, res) => {
+  try {
+    // Tìm tất cả các đơn hàng đã giao
+    const result = await Order.aggregate([
+      {
+        $match: {
+          status: "delivered", // Chỉ tính doanh thu từ đơn hàng đã giao
+        },
+      },
+      { 
+        $unwind: "$productVariants", // Phân tách sản phẩm trong đơn hàng
+      },
+      {
+        $lookup: {
+          from: "productvariants", // Tên collection trong MongoDB
+          localField: "productVariants.productVariant", // Trường productVariant trong productVariants của đơn hàng
+          foreignField: "_id", // Trường _id trong productvariant collection
+          as: "productDetails", // Kết quả nối sẽ được lưu vào mảng productDetails
+        },
+      },
+      {
+        $unwind: "$productDetails", // Phân tách dữ liệu từ productDetails để lấy tên sản phẩm
+      },
+      {
+        $group: {
+          _id: "$productVariants.productVariant", // Nhóm theo productVariant ID
+          name: { $first: "$productDetails.name" }, // Lấy tên sản phẩm từ productDetails
+          totalSales: { $sum: { $multiply: ["$productVariants.quantity", "$totalAmount"] } }, // Tổng doanh thu cho sản phẩm
+          totalOrders: { $sum: 1 }, // Tổng số lượng đơn hàng cho sản phẩm
+        },
+      },
+      {
+        $sort: { totalSales: -1 }, // Sắp xếp theo doanh thu giảm dần
+      },
+    ]);
+    
+    // Nếu có kết quả, trả về dữ liệu
+    if (result.length > 0) {
+      res.status(200).json({ message: "Revenue by product retrieved successfully", result });
+    } else {
+      res.status(404).json({ message: "No revenue data found for products" });
+    }
+  } catch (error) {
+    console.log("Error in revenueByProduct controller", error.message);
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
 
 module.exports = {
   revenueADay,
-  revenueAWeek,
-  revenueAYear,
   calculateTotalRevenue,
+  revenueByProduct
 };

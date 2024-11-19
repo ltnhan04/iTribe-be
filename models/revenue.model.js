@@ -14,10 +14,24 @@ const revenueSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    week: Number,
-    month: Number,
-    year: Number,
+    productVariants: [
+      {
+        productVariant: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "ProductVariant",
+        },
+        totalSales: {
+          type: Number,
+          default: 0,
+        },
+        totalOrders: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
+
 module.exports = mongoose.model("Revenue", revenueSchema);
