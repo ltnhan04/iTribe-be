@@ -3,8 +3,8 @@ const Order = require("../../models/order.model");
 const getAllOrders = async (_, res) => {
   try {
     const orders = await Order.find()
-      .populate({ path: "user", select: "name", match: { _id: { $ne: null } } })
-      .populate("productVariants.productVariant", "name color storage");
+      .populate({ path: "user", select: "name email phoneNumber address ", match: { _id: { $ne: null } } })
+      .populate("productVariants.productVariant", "name color storage images");
 
     const filteredOrders = orders.filter(
       (order) =>
@@ -20,6 +20,9 @@ const getAllOrders = async (_, res) => {
       user: {
         id: order.user._id,
         name: order.user.name,
+        email: order.user.email,
+        phoneNumber: order.user.phoneNumber,
+        address: order.user.address,
       },
       productVariants: order.productVariants.map((item) => ({
         productVariantId: item.productVariant._id,
@@ -28,6 +31,7 @@ const getAllOrders = async (_, res) => {
         productColorCode: item.productVariant.color?.colorCode,
         productStorage: item.productVariant.storage,
         quantity: item.quantity,
+        productImages: item.productVariant.images,
       })),
       totalAmount: order.totalAmount,
       status: order.status,
@@ -43,6 +47,54 @@ const getAllOrders = async (_, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
+const getOrderDetail = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Tìm đơn hàng bằng orderId
+    const order = await Order.findById(orderId)
+      .populate({ path: "user", select: "name email phoneNumber address" }) // Populate thông tin user
+      .populate("productVariants.productVariant", "name color storage images"); // Populate thông tin sản phẩm
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Chuẩn bị dữ liệu trả về
+    const response = {
+      orderId: order._id,
+      user: {
+        id: order.user._id,
+        name: order.user.name,
+        email: order.user.email,
+        phoneNumber: order.user.phoneNumber,
+        address: order.user.address,
+      },
+      productVariants: order.productVariants.map((item) => ({
+        productVariantId: item.productVariant._id,
+        productName: item.productVariant.name,
+        productColorName: item.productVariant.color?.colorName,
+        productColorCode: item.productVariant.color?.colorCode,
+        productStorage: item.productVariant.storage,
+        quantity: item.quantity,
+        productImages: item.productVariant.images,
+      })),
+      totalAmount: order.totalAmount,
+      status: order.status,
+      shippingAddress: order.shippingAddress,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    };
+
+    res.status(200).json({ order: response });
+  } catch (error) {
+    console.log("Error in getOrderDetail controller", error.message);
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
+
 
 const updateOrderStatus = async (req, res) => {
   try {
@@ -75,22 +127,6 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-const deleteOrder = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-
-    const order = await Order.findByIdAndDelete(orderId);
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    res.status(200).json({ message: "Order deleted successfully" });
-  } catch (error) {
-    console.log("Error in deleteOrder controller", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
-  }
-};
 
 const getPaginatedOrder = async (req, res) => {
   try {
@@ -134,5 +170,6 @@ module.exports = {
   getPaginatedOrder,
   getAllOrders,
   updateOrderStatus,
-  deleteOrder,
+  getOrderDetail
+
 };
