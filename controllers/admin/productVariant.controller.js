@@ -120,24 +120,36 @@ const createProductVariant = async (req, res) => {
 const updateProductVariant = async (req, res) => {
   try {
     const { variantId } = req.params;
+    const { existingImages } = req.body;
+
     if (!variantId) {
       return res.status(400).json({ message: "Variant ID is required" });
     }
 
-    let imageUrls = [];
-    if (req.files && req.files.length > 0) {
-      const productVariant = await ProductVariant.findById(variantId);
-      if (!productVariant) {
-        return res.status(404).json({ message: "Product variant not found" });
-      }
-      if (productVariant.images) {
-        await deleteImage(productVariant.images);
-      }
-      imageUrls = await uploadImage(req.files);
+    const productVariant = await ProductVariant.findById(variantId);
+    if (!productVariant) {
+      return res.status(404).json({ message: "Product variant not found" });
     }
 
-    const updates = { ...req.body };
-    if (imageUrls) updates.images = imageUrls;
+    const parsedExistingImages = existingImages
+      ? JSON.parse(existingImages)
+      : [];
+
+    const imagesToDelete = productVariant.images.filter(
+      (image) => !parsedExistingImages.includes(image)
+    );
+    if (imagesToDelete.length > 0) {
+      await deleteImage(imagesToDelete);
+    }
+
+    let newImages = [];
+    if (req.files && req.files.length > 0) {
+      newImages = await uploadImage(req.files);
+    }
+
+    const updatedImages = [...parsedExistingImages, ...newImages];
+
+    const updates = { ...req.body, images: updatedImages };
 
     const updatedProductVariant = await ProductVariant.findByIdAndUpdate(
       variantId,
