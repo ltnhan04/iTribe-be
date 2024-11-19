@@ -1,5 +1,4 @@
 const { uploadImage, deleteImage } = require("../../services/upload.services");
-const mongoose = require("mongoose");
 const Product = require("../../models/product.model");
 const ProductVariant = require("../../models/productVariant.model");
 
@@ -42,6 +41,21 @@ const getAllProductVariants = async (req, res) => {
     res.status(200).json({ variants: product });
   } catch (error) {
     console.log("Error in getAllProductVariants controller:", error.message);
+    res.status(500).json({ message: "Server Error!" });
+  }
+};
+
+const getProductVariant = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const variant = await ProductVariant.findById(id);
+    if (!variant) {
+      return res.status(404).json({ message: "Product variant not found" });
+    }
+
+    res.status(200).json({ variant });
+  } catch (error) {
+    console.log("Error in getProductVariant controller:", error.message);
     res.status(500).json({ message: "Server Error!" });
   }
 };
@@ -181,6 +195,7 @@ const deleteProductVariant = async (req, res) => {
 
 module.exports = {
   getAllProductVariants,
+  getProductVariant,
   createProductVariant,
   updateProductVariant,
   deleteProductVariant,

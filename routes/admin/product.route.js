@@ -15,6 +15,7 @@ const {
 const {
   createProductVariant,
   updateProductVariant,
+  getProductVariant,
   deleteProductVariant,
   getAllProductVariants,
 } = require("../../controllers/admin/productVariant.controller");
@@ -26,6 +27,7 @@ router.post("/", verifyAdmin, createProduct);
 router.put("/:id", verifyAdmin, upload.single("image"), updateProduct);
 router.delete("/:id", verifyAdmin, deleteProduct);
 //variant
+router.get("/variant/:id", verifyAdmin, getProductVariant);
 router.get("/variant/:productId", getAllProductVariants);
 
 router.post(
