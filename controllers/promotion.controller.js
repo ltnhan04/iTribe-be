@@ -19,7 +19,13 @@ const applyPromotion = async (req, res) => {
         .status(400)
         .json({ message: "Promotion is not valid or expired" });
     }
-
+    if (totalAmount < promotion.minOrderAmount) {
+      return res
+        .status(400)
+        .json({
+          message: `Order must be at least ${promotion.minOrderAmount} to use this promotion`,
+        });
+    }
     if (promotion.usedCount >= promotion.maxUsage) {
       return res.status(400).json({ message: "Promotion usage limit reached" });
     }

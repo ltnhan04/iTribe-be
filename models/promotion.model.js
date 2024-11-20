@@ -27,6 +27,10 @@ const promotionSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    minOrderAmount: {
+      type: Number,
+      default: 0,
+    },
     usedCount: {
       type: Number,
       default: 0,
