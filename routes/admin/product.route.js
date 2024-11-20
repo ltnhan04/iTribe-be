@@ -1,8 +1,9 @@
 const router = require("express").Router();
-const { verifyAdmin } = require("../../middleware/auth.middleware");
 const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+const { verifyAdmin } = require("../../middleware/auth.middleware");
+const uploadFile = require("../../services/uploadFile.services");
 
 const {
   getAllProductsAdmin,
@@ -18,6 +19,7 @@ const {
   getProductVariant,
   deleteProductVariant,
   getAllProductVariants,
+  importVariantFromExcel,
 } = require("../../controllers/admin/productVariant.controller");
 
 router.get("/", verifyAdmin, getAllProductsAdmin);
@@ -45,5 +47,12 @@ router.put(
 );
 
 router.delete("/variant/:variantId", verifyAdmin, deleteProductVariant);
+
+router.post(
+  "/variant/import",
+  uploadFile.single("file"),
+  verifyAdmin,
+  importVariantFromExcel
+);
 
 module.exports = router;

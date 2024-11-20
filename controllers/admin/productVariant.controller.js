@@ -1,3 +1,5 @@
+const XLSX = require("xlsx");
+const fs = require("fs");
 const { uploadImage, deleteImage } = require("../../services/upload.services");
 const Product = require("../../models/product.model");
 const ProductVariant = require("../../models/productVariant.model");
@@ -9,8 +11,6 @@ const getAllProductVariants = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-
-    // const variantsWithRatings = await ProductVariant.aggregate([
     //   { $match: { productId: mongoose.Types.ObjectId(productId) } },
     //   {
     //     $lookup: {
@@ -239,10 +239,82 @@ const deleteProductVariant = async (req, res) => {
   }
 };
 
+const importVariantFromExcel = async (req, res) => {
+  const { productId } = req.body;
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const variants = sheetData.map((row) => ({
+      productId,
+      name: row["Name"],
+      slug: row["Slug"],
+      color: {
+        colorName: row["Color Name"],
+        colorCode: row["Color Code"],
+      },
+      storage: row["Storage"],
+      price: row["Price"],
+      stock: row["Stock"],
+      images: row["Image URLs"] ? row["Image URLs"].split(",") : [],
+    }));
+
+    const savedVariants = [];
+    for (const variant of variants) {
+      const productVariant = new ProductVariant(variant);
+
+      const savedVariant = await productVariant.save();
+      product.variants.push(savedVariant._id);
+
+      if (!product.image && savedVariant.images.length > 0) {
+        product.image = savedVariant.images[0];
+      }
+
+      savedVariants.push(savedVariant);
+    }
+
+    await product.save();
+
+    fs.unlink(req.file.path, (err) => {
+      if (err) {
+        console.error("Error deleting file:", err);
+      } else {
+        console.log("Temporary file deleted:", req.file.path);
+      }
+    });
+
+    res.status(201).json({
+      message: "Variants imported successfully!",
+      variants: savedVariants,
+    });
+  } catch (error) {
+    console.error("Error in importVariantsFromExcel:", error.message);
+
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error("Error deleting file:", err);
+      });
+    }
+
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 module.exports = {
   getAllProductVariants,
   getProductVariant,
   createProductVariant,
   updateProductVariant,
   deleteProductVariant,
+  importVariantFromExcel,
 };
