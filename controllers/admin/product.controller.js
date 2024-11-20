@@ -45,11 +45,27 @@ const getProductDetailsAdmin = async (req, res) => {
   }
 
   try {
-    const product = await Product.findById(id).populate("variants");
+    const product = await Product.findById(id).populate({
+      path: "variants",
+      populate: { path: "reviews", model: "Review" },
+    });
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
+
+    product.variants = product.variants.map((variant) => {
+      if (variant.reviews && variant.reviews.length > 0) {
+        const totalRating = variant.reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
+        variant.rating = (totalRating / variant.reviews.length).toFixed(1);
+      } else {
+        variant.rating = 0;
+      }
+      return variant;
+    });
 
     res.status(200).json({ product });
   } catch (error) {
