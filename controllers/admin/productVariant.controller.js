@@ -48,7 +48,10 @@ const getAllProductVariants = async (req, res) => {
 const getProductVariant = async (req, res) => {
   const { id } = req.params;
   try {
-    const variant = await ProductVariant.findById(id);
+    const variant = await ProductVariant.findById(id).populate({
+      path: "reviews",
+      populate: { path: "user", select: "name email" },
+    });
     if (!variant) {
       return res.status(404).json({ message: "Product variant not found" });
     }
