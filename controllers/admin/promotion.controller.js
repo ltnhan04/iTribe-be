@@ -2,7 +2,18 @@ const Promotion = require("../../models/promotion.model");
 
 const createPromotion = async (req, res) => {
   try {
-    const { code, discountPercentage, validFrom, validTo, maxUsage } = req.body;
+    const {
+      code,
+      discountPercentage,
+      validFrom,
+      validTo,
+      maxUsage,
+      minOrderAmount,
+    } = req.body;
+    const existingPromotion = await Promotion.findOne({ code });
+    if (existingPromotion) {
+      return res.status(400).json({ message: "Promotion code already exists" });
+    }
 
     const newPromotion = new Promotion({
       code,
@@ -10,6 +21,7 @@ const createPromotion = async (req, res) => {
       validFrom,
       validTo,
       maxUsage,
+      minOrderAmount,
     });
 
     const savedPromotion = await newPromotion.save();
