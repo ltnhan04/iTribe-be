@@ -16,9 +16,7 @@ const getPaginatedUser = async (req, res) => {
 
 const getAllUser = async (_, res) => {
   try {
-    const users = await User.find().select(
-      "_id name email phoneNumber role active"
-    );
+    const users = await User.find({});
     if (!users.length) {
       return res.status(404).json({ message: "No users found!" });
     }
@@ -72,7 +70,6 @@ const getUserOrder = async (req, res) => {
   }
 };
 
-
 const getUserOrderDetail = async (req, res) => {
   try {
     const { productVariantId } = req.params;
@@ -83,12 +80,13 @@ const getUserOrderDetail = async (req, res) => {
       return res.status(400).json({ message: "Invalid product variant ID" });
     }
 
-    const productVariant = await ProductVariant.findById(productVariantId)
-      .populate({
-        path: "productId",
-        model: "Product",
-        select: "name price",
-      });
+    const productVariant = await ProductVariant.findById(
+      productVariantId
+    ).populate({
+      path: "productId",
+      model: "Product",
+      select: "name price",
+    });
 
     if (!productVariant) {
       return res.status(404).json({ message: "Product variant not found" });
@@ -100,7 +98,6 @@ const getUserOrderDetail = async (req, res) => {
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-
 
 const banUser = async (req, res) => {
   try {
