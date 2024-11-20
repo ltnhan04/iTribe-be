@@ -120,7 +120,17 @@ const createProductVariant = async (req, res) => {
 const updateProductVariant = async (req, res) => {
   try {
     const { variantId } = req.params;
-    const { existingImages } = req.body;
+    const {
+      existingImages,
+      colorName,
+      colorCode,
+      storage,
+      price,
+      stock,
+      name,
+      slug,
+      productId,
+    } = req.body;
 
     if (!variantId) {
       return res.status(400).json({ message: "Variant ID is required" });
@@ -134,10 +144,10 @@ const updateProductVariant = async (req, res) => {
     const parsedExistingImages = existingImages
       ? JSON.parse(existingImages)
       : [];
-
     const imagesToDelete = productVariant.images.filter(
       (image) => !parsedExistingImages.includes(image)
     );
+
     if (imagesToDelete.length > 0) {
       await deleteImage(imagesToDelete);
     }
@@ -149,7 +159,16 @@ const updateProductVariant = async (req, res) => {
 
     const updatedImages = [...parsedExistingImages, ...newImages];
 
-    const updates = { ...req.body, images: updatedImages };
+    const updates = {
+      productId,
+      name,
+      slug,
+      color: { colorName, colorCode },
+      storage,
+      price: Number(price),
+      stock: Number(stock),
+      images: updatedImages,
+    };
 
     const updatedProductVariant = await ProductVariant.findByIdAndUpdate(
       variantId,
@@ -158,7 +177,9 @@ const updateProductVariant = async (req, res) => {
     );
 
     if (!updatedProductVariant) {
-      return res.status(404).json({ message: "Product variant not found" });
+      return res
+        .status(404)
+        .json({ message: "Product variant not found after update" });
     }
 
     res.status(200).json({
