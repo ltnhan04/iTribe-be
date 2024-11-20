@@ -56,6 +56,16 @@ const getProductVariant = async (req, res) => {
       return res.status(404).json({ message: "Product variant not found" });
     }
 
+    const totalRatings = variant.reviews.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
+    const averageRating =
+      variant.reviews.length > 0
+        ? (totalRatings / variant.reviews.length).toFixed(2)
+        : 0;
+
+    variant.rating = averageRating;
     res.status(200).json({ variant });
   } catch (error) {
     console.log("Error in getProductVariant controller:", error.message);
