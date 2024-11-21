@@ -51,7 +51,7 @@ const getUserOrder = async (req, res) => {
       populate: {
         path: "productVariants.productVariant",
         model: "ProductVariant",
-        select: "name price color stock",
+        select: "name price color storage",
       },
     });
 
