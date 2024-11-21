@@ -26,8 +26,20 @@ const revenueADay = async (_, res) => {
         $unwind: "$productVariants",
       },
       {
+        $lookup: {
+          from: "productvariants",
+          localField: "productVariants.productVariant",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      {
+        $unwind: "$productDetails",
+      },
+      {
         $group: {
           _id: "$productVariants.productVariant",
+          name: { $first: "$productDetails.name" },
           totalSales: {
             $sum: { $multiply: ["$productVariants.quantity", "$totalAmount"] },
           },
@@ -46,14 +58,16 @@ const revenueADay = async (_, res) => {
         year: today.getFullYear(),
         productVariants: result.map((item) => ({
           productVariant: item._id,
+          name: item.name,
           totalSales: item.totalSales,
           totalOrders: item.totalOrders,
         })),
       });
       await revenue.save();
-      res
-        .status(200)
-        .json({ message: "Revenue created successfully", revenue });
+      res.status(200).json({
+        message: "Revenue created successfully",
+        revenue,
+      });
     } else {
       res.status(404).json({ message: "No delivered orders found for today" });
     }
@@ -83,8 +97,20 @@ const revenueLastDays = async (req, res) => {
         $unwind: "$productVariants",
       },
       {
+        $lookup: {
+          from: "productvariants",
+          localField: "productVariants.productVariant",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      {
+        $unwind: "$productDetails",
+      },
+      {
         $group: {
           _id: "$productVariants.productVariant",
+          name: { $first: "$productDetails.name" },
           totalSales: {
             $sum: { $multiply: ["$productVariants.quantity", "$totalAmount"] },
           },
@@ -103,7 +129,12 @@ const revenueLastDays = async (req, res) => {
         message: `Revenue for the last ${days} days retrieved successfully`,
         totalSales,
         totalOrders,
-        details: result,
+        details: result.map((item) => ({
+          productVariant: item._id,
+          name: item.name,
+          totalSales: item.totalSales,
+          totalOrders: item.totalOrders,
+        })),
       });
     } else {
       res
@@ -125,19 +156,50 @@ const calculateTotalRevenue = async (_, res) => {
         },
       },
       {
+        $unwind: "$productVariants",
+      },
+      {
+        $lookup: {
+          from: "productvariants",
+          localField: "productVariants.productVariant",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      {
+        $unwind: "$productDetails",
+      },
+      {
         $group: {
-          _id: null,
-          totalSales: { $sum: "$totalAmount" },
+          _id: "$productVariants.productVariant",
+          name: { $first: "$productDetails.name" },
+          totalSales: {
+            $sum: { $multiply: ["$productVariants.quantity", "$totalAmount"] },
+          },
           totalOrders: { $sum: 1 },
         },
       },
     ]);
-    res.status(200).json({ result });
+
+    const totalSales = result.reduce((acc, curr) => acc + curr.totalSales, 0);
+    const totalOrders = result.reduce((acc, curr) => acc + curr.totalOrders, 0);
+
+    res.status(200).json({
+      totalSales,
+      totalOrders,
+      details: result.map((item) => ({
+        productVariant: item._id,
+        name: item.name,
+        totalSales: item.totalSales,
+        totalOrders: item.totalOrders,
+      })),
+    });
   } catch (error) {
     console.log("Error in calculateTotalRevenue controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
 const revenueByProduct = async (_, res) => {
   try {
     const result = await Order.aggregate([
