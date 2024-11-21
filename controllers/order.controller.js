@@ -1,6 +1,7 @@
 const Order = require("../models/order.model");
 const User = require("../models/user.model");
 const ProductVariant = require("../models/productVariant.model");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const createOrder = async (req, res) => {
   try {
@@ -123,8 +124,47 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+const updateOrderPayment = async (req, res) => {
+  try {
+    const { sessionId, orderId } = req.body;
+
+    if (!sessionId || !orderId) {
+      return res.status(400).json({ message: "Missing sessionId or orderId" });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (!session || session.payment_status !== "paid") {
+      return res.status(400).json({ message: "Payment not successful" });
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    order.status = "processing";
+    order.stripeSessionId = session.id;
+
+    const updatedOrder = await order.save();
+
+    res.status(200).json({
+      message: "Order updated successfully",
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.error(
+      "Error in updateOrderAfterPayment controller:",
+      error.message
+    );
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrdersByUser,
   cancelOrder,
+  updateOrderPayment,
 };
