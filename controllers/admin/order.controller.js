@@ -56,16 +56,14 @@ const getOrderDetail = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    // Tìm đơn hàng bằng orderId
     const order = await Order.findById(orderId)
-      .populate({ path: "user", select: "name email phoneNumber address" }) // Populate thông tin user
-      .populate("productVariants.productVariant", "name color storage images"); // Populate thông tin sản phẩm
+      .populate({ path: "user", select: "name email phoneNumber address" })
+      .populate("productVariants.productVariant", "name color storage images");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Chuẩn bị dữ liệu trả về
     const response = {
       orderId: order._id,
       user: {
@@ -138,11 +136,9 @@ const updateOrderStatus = async (req, res) => {
     };
 
     if (!validTransitions[currentStatus].includes(status)) {
-      return res
-        .status(400)
-        .json({
-          message: `Cannot change status from ${currentStatus} to ${status}`,
-        });
+      return res.status(400).json({
+        message: `Cannot change status from ${currentStatus} to ${status}`,
+      });
     }
 
     if (currentStatus === "pending" && status === "processing") {
@@ -152,11 +148,9 @@ const updateOrderStatus = async (req, res) => {
 
         const newStock = productVariant.stock - item.quantity;
         if (newStock < 0) {
-          return res
-            .status(400)
-            .json({
-              message: `Insufficient stock for product ${productVariant.name}`,
-            });
+          return res.status(400).json({
+            message: `Insufficient stock for product ${productVariant.name}`,
+          });
         }
 
         productVariant.stock = newStock;
