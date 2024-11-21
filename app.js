@@ -3,6 +3,8 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const connectDB = require("./libs/db");
+const http = require("http");
+const socketIo = require("socket.io");
 
 // Customer routes
 const authRoutes = require("./routes/auth.route");
@@ -19,20 +21,32 @@ const promotionRoutesAdmin = require("./routes/admin/promotion.route");
 const reviewRoutesAdmin = require("./routes/admin/review.route");
 const revenueRoutesAdmin = require("./routes/admin/revenue.route");
 
+// Chat routes
+const chatRoutes = require("./routes/chat.routes");
+
 dotenv.config();
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*", 
+    credentials: true,
+  },
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
+// Cấu hình CORS
 const corsOptions = {
   origin: [
     "http://localhost:3000",
     "https://i-tribe.vercel.app",
     "https://i-tribe-admin.vercel.app",
     "http://localhost:5173",
-    "*"
+    "*",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
@@ -55,11 +69,28 @@ app.use("/api/admin/reviews", reviewRoutesAdmin);
 app.use("/api/admin/promotions", promotionRoutesAdmin);
 app.use("/api/admin/revenue", revenueRoutesAdmin);
 
+// Chat routes
+app.use("/api/chat", chatRoutes);
+
 app.get("/", (_, res) => {
   res.send("Hello World!");
 });
 
-app.listen(PORT, () => {
+io.on("connection", (socket) => {
+  console.log("A user connected: " + socket.id);
+
+  socket.on("sendMessage", (messageData) => {
+    console.log("Message received: ", messageData);
+
+    io.emit("newMessage", messageData);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected: " + socket.id);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-  connectDB();
+  connectDB(); 
 });
