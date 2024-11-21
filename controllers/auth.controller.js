@@ -346,6 +346,69 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const getProfileForAdmin = async (req, res) => {
+  try {
+    // Kiểm tra nếu user hiện tại không phải là admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Tìm admin dựa trên ID của họ
+    const admin = await User.findById(req.user._id).populate({
+      path: "orderHistory",
+      populate: {
+        path: "productVariants.productVariant",
+        select: "name color storage price",
+      },
+    });
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.status(200).json(admin);
+  } catch (error) {
+    console.log("Error in getProfileForAdmin controller", error.message);
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
+const updateProfileForAdmin = async (req, res) => {
+  const { name, phoneNumber, address } = req.body;
+
+  try {
+    // Kiểm tra nếu user hiện tại không phải là admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Cập nhật thông tin của chính admin
+    const updatedAdmin = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        name,
+        phoneNumber,
+        address,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedAdmin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.status(200).json({
+      message: "Admin profile updated successfully",
+      admin: updatedAdmin,
+    });
+  } catch (error) {
+    console.log("Error in updateProfileForAdmin controller:", error.message);
+    res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
+
 module.exports = {
   signUp,
   login,
@@ -357,4 +420,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   resentOTP,
+  getProfileForAdmin,
+  updateProfileForAdmin
 };
