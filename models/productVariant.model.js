@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const Notification = require("./notification.model"); 
 const productVariantSchema = new mongoose.Schema(
   {
     productId: {
@@ -52,5 +52,22 @@ const productVariantSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+productVariantSchema.post("save", async function (doc) {
+  try {
+    if (doc.stock < 10) {
+      // Create notification when stock is less than 10
+      await Notification.create({
+        message: `Stock of "${doc.name}" is low.`,
+        type: "general",
+        productVariantId: doc._id, // Save the product variant ID
+      });
+      console.log(
+        `Notification created: Stock for "${doc.name}" is below 10.`
+      );
+    }
+  } catch (error) {
+    console.error("Error creating notification:", error);
+  }
+});
 
 module.exports = mongoose.model("ProductVariant", productVariantSchema);

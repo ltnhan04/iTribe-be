@@ -12,6 +12,7 @@ const productRoutes = require("./routes/product.route");
 const ordersRoutes = require("./routes/order.route");
 const promotionRoutes = require("./routes/promotion.route");
 const reviewRoutes = require("./routes/review.route");
+const paymentRoutes = require("./routes/payment.route");
 
 // Admin routes
 const productRoutesAdmin = require("./routes/admin/product.route");
@@ -20,6 +21,7 @@ const orderRouteAdmin = require("./routes/admin/order.route");
 const promotionRoutesAdmin = require("./routes/admin/promotion.route");
 const reviewRoutesAdmin = require("./routes/admin/review.route");
 const revenueRoutesAdmin = require("./routes/admin/revenue.route");
+const notificationRouteAdmin = require("./routes/admin/notification.route");
 
 // Chat routes
 const chatRoutes = require("./routes/chat.routes");
@@ -66,6 +68,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/promotions", promotionRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Admin routes
 app.use("/api/admin/products", productRoutesAdmin);
@@ -74,6 +77,7 @@ app.use("/api/admin/orders", orderRouteAdmin);
 app.use("/api/admin/reviews", reviewRoutesAdmin);
 app.use("/api/admin/promotions", promotionRoutesAdmin);
 app.use("/api/admin/revenue", revenueRoutesAdmin);
+app.use("/api/admin/notifications", notificationRouteAdmin);
 
 // Chat routes
 app.use("/api/chat", chatRoutes);

@@ -17,13 +17,14 @@ const getAllProductsAdmin = async (_, res) => {
         });
         const price = firstVariant ? firstVariant.price : 0;
         const firstProduct = firstVariant ? firstVariant.images[0] : null;
+        const newStatus = firstVariant ? "active" : "inactive";
 
         return {
           _id: product._id,
           name: product.name,
           image: firstProduct,
           price,
-          status: product.status,
+          status: newStatus,
         };
       })
     );

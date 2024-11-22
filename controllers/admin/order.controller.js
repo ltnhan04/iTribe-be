@@ -3,7 +3,11 @@ const Order = require("../../models/order.model");
 const getAllOrders = async (_, res) => {
   try {
     const orders = await Order.find()
-      .populate({ path: "user", select: "name email phoneNumber address ", match: { _id: { $ne: null } } })
+      .populate({
+        path: "user",
+        select: "name email phoneNumber address ",
+        match: { _id: { $ne: null } },
+      })
       .populate("productVariants.productVariant", "name color storage images");
 
     const filteredOrders = orders.filter(
@@ -52,16 +56,14 @@ const getOrderDetail = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    // Tìm đơn hàng bằng orderId
     const order = await Order.findById(orderId)
-      .populate({ path: "user", select: "name email phoneNumber address" }) // Populate thông tin user
-      .populate("productVariants.productVariant", "name color storage images"); // Populate thông tin sản phẩm
+      .populate({ path: "user", select: "name email phoneNumber address" })
+      .populate("productVariants.productVariant", "name color storage images");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Chuẩn bị dữ liệu trả về
     const response = {
       orderId: order._id,
       user: {
@@ -95,22 +97,75 @@ const getOrderDetail = async (req, res) => {
   }
 };
 
-
 const updateOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
-    if (
-      !["pending", "processing", "shipped", "delivered", "cancel"].includes(
-        status
-      )
-    ) {
+
+    const validStatuses = [
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancel",
+    ];
+
+    if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).populate(
+      "productVariants.productVariant"
+    );
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
+    }
+
+    const currentStatus = order.status;
+
+    if (["delivered", "cancel"].includes(currentStatus)) {
+      return res
+        .status(400)
+        .json({ message: "Order cannot be updated from its current status" });
+    }
+
+    const validTransitions = {
+      pending: ["processing", "cancel"],
+      processing: ["shipped", "cancel"],
+      shipped: ["delivered"],
+    };
+
+    if (!validTransitions[currentStatus].includes(status)) {
+      return res.status(400).json({
+        message: `Cannot change status from ${currentStatus} to ${status}`,
+      });
+    }
+
+    if (currentStatus === "pending" && status === "processing") {
+      for (const item of order.productVariants) {
+        const productVariant = item.productVariant;
+        if (!productVariant) continue;
+
+        const newStock = productVariant.stock - item.quantity;
+        if (newStock < 0) {
+          return res.status(400).json({
+            message: `Insufficient stock for product ${productVariant.name}`,
+          });
+        }
+
+        productVariant.stock = newStock;
+        await productVariant.save();
+      }
+    }
+
+    if (status === "cancel") {
+      for (const item of order.productVariants) {
+        const productVariant = item.productVariant;
+        if (!productVariant) continue;
+
+        productVariant.stock += item.quantity;
+        await productVariant.save();
+      }
     }
 
     order.status = status;
@@ -118,15 +173,16 @@ const updateOrderStatus = async (req, res) => {
     if (!savedOrder) {
       return res.status(400).json({ message: "Failed to update order status" });
     }
-    res
-      .status(200)
-      .json({ message: "Order status updated successfully", order });
+
+    res.status(200).json({
+      message: "Order status updated successfully",
+      order: savedOrder,
+    });
   } catch (error) {
-    console.log("Error in updateOrderStatus controller", error.message);
+    console.error("Error in updateOrderStatus controller:", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-
 
 const getPaginatedOrder = async (req, res) => {
   try {
@@ -170,6 +226,5 @@ module.exports = {
   getPaginatedOrder,
   getAllOrders,
   updateOrderStatus,
-  getOrderDetail
-
+  getOrderDetail,
 };

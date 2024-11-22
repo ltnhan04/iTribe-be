@@ -20,6 +20,9 @@ const revenueSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "ProductVariant",
         },
+        name: {
+          type: String,
+        },
         totalSales: {
           type: Number,
           default: 0,

@@ -51,7 +51,7 @@ const getUserOrder = async (req, res) => {
       populate: {
         path: "productVariants.productVariant",
         model: "ProductVariant",
-        select: "name price color stock",
+        select: "name price color storage",
       },
     });
 
@@ -73,9 +73,6 @@ const getUserOrder = async (req, res) => {
 const getUserOrderDetail = async (req, res) => {
   try {
     const { productVariantId } = req.params;
-    console.log(productVariantId);
-
-    // Validate that productVariantId is a valid ObjectId string
     if (!mongoose.Types.ObjectId.isValid(String(productVariantId))) {
       return res.status(400).json({ message: "Invalid product variant ID" });
     }
