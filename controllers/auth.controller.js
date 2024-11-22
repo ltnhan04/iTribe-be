@@ -197,7 +197,7 @@ const refreshToken = async (req, res) => {
     const accessToken = jwt.sign(
       { userId: decoded.userId },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "30m" }
+      { expiresIn: "1h" }
     );
     const newRefreshToken = jwt.sign(
       { userId: decoded.userId },
@@ -421,5 +421,5 @@ module.exports = {
   resetPassword,
   resentOTP,
   getProfileForAdmin,
-  updateProfileForAdmin
+  updateProfileForAdmin,
 };
