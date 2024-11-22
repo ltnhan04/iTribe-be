@@ -23,7 +23,7 @@ const reviewRoutesAdmin = require("../routes/admin/review.route");
 const revenueRoutesAdmin = require("../routes/admin/revenue.route");
 
 // Chat routes
-const chatRoutes = require("./routes/chat.routes");
+const chatRoutes = require("../routes/chat.routes");
 
 const server = http.createServer(app);
 const io = socketIo(server, {
