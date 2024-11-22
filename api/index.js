@@ -24,9 +24,10 @@ const orderRouteAdmin = require("../routes/admin/order.route");
 const promotionRoutesAdmin = require("../routes/admin/promotion.route");
 const reviewRoutesAdmin = require("../routes/admin/review.route");
 const revenueRoutesAdmin = require("../routes/admin/revenue.route");
+const notificationRouteAdmin = require("../routes/admin/notification.route");
 
 // Chat routes
-const chatRoutes = require("../routes/chat.routes");
+const chatRoutes = require("../routes/chat.route");
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -73,6 +74,8 @@ app.use("/api/admin/orders", orderRouteAdmin);
 app.use("/api/admin/reviews", reviewRoutesAdmin);
 app.use("/api/admin/promotions", promotionRoutesAdmin);
 app.use("/api/admin/revenue", revenueRoutesAdmin);
+app.use("/api/admin/notifications", notificationRouteAdmin);
+
 // Chat routes
 app.use("/api/chat", chatRoutes);
 

@@ -24,7 +24,7 @@ const revenueRoutesAdmin = require("./routes/admin/revenue.route");
 const notificationRouteAdmin = require("./routes/admin/notification.route");
 
 // Chat routes
-const chatRoutes = require("./routes/chat.routes");
+const chatRoutes = require("./routes/chat.route");
 
 dotenv.config();
 const app = express();
@@ -37,7 +37,7 @@ const io = socketIo(server, {
       "https://i-tribe-admin.vercel.app",
       "http://localhost:5173",
       "*",
-    ], 
+    ],
     credentials: true,
   },
 });
@@ -102,5 +102,5 @@ io.on("connection", (socket) => {
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-  connectDB(); 
+  connectDB();
 });
