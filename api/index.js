@@ -3,6 +3,9 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const connectDB = require("../libs/db");
+
+dotenv.config();
+const app = express();
 const http = require("http");
 const socketIo = require("socket.io");
 
@@ -34,14 +37,10 @@ const io = socketIo(server, {
       "https://i-tribe-admin.vercel.app",
       "http://localhost:5173",
       "*",
-    ], 
+    ],
     credentials: true,
   },
 });
-
-
-dotenv.config();
-const app = express();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
@@ -90,7 +89,6 @@ io.on("connection", (socket) => {
     console.log("A user disconnected: " + socket.id);
   });
 });
-
 
 app.get("/", (_, res) => {
   res.send("Hello World!");
