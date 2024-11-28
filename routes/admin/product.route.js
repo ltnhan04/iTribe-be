@@ -3,7 +3,7 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const { verifyAdmin } = require("../../middleware/auth.middleware");
-const uploadFile = require("../../services/uploadFile.services");
+const uploadFile = require("../../services/uploadFile.service.js");
 
 const {
   getAllProductsAdmin,

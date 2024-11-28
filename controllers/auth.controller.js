@@ -6,11 +6,8 @@ const {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendResetSuccessEmail,
-} = require("../services/nodemailer/email");
-const {
-  generateToken,
-  storeRefreshToken,
-} = require("../services/token.services");
+} = require("../services/nodemailer/email.service");
+const { generateToken, storeRefreshToken } = require("../helpers/token.helper");
 
 const signUp = async (req, res) => {
   const { email, password, name } = req.body;
@@ -43,7 +40,7 @@ const verifySignUp = async (req, res) => {
   try {
     const storedData = await redis.get(`signup:${email}`);
     if (!storedData) {
-      return res.status(400).json({ message: "OTP didn't exist" });
+      return res.status(400).json({ message: "OTP doesn't exist" });
     }
 
     const { name, password, verificationCode, createdAt } =
@@ -182,7 +179,6 @@ const logout = async (req, res) => {
 const refreshToken = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    console.log(refreshToken);
     if (!refreshToken) {
       return res.status(401).json({ message: "No refresh token provided" });
     }
@@ -348,12 +344,10 @@ const resetPassword = async (req, res) => {
 
 const getProfileForAdmin = async (req, res) => {
   try {
-    // Kiểm tra nếu user hiện tại không phải là admin
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    // Tìm admin dựa trên ID của họ
     const admin = await User.findById(req.user._id).populate({
       path: "orderHistory",
       populate: {
@@ -376,12 +370,10 @@ const updateProfileForAdmin = async (req, res) => {
   const { name, phoneNumber, address } = req.body;
 
   try {
-    // Kiểm tra nếu user hiện tại không phải là admin
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    // Cập nhật thông tin của chính admin
     const updatedAdmin = await User.findByIdAndUpdate(
       req.user._id,
       {
