@@ -18,4 +18,4 @@ class RedisHelper {
   };
 }
 
-module.exports = RedisService;
+module.exports = RedisHelper;

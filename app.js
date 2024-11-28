@@ -2,10 +2,11 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const connectDB = require("./libs/db");
 const http = require("http");
 const socketIo = require("socket.io");
 
+const connectDB = require("./libs/db");
+const socketHandler = require("./libs/socket");
 // Customer routes
 const authRoutes = require("./routes/auth.route");
 const productRoutes = require("./routes/product.route");
@@ -85,18 +86,12 @@ app.get("/", (_, res) => {
   res.send("Hello World!");
 });
 
-io.on("connection", (socket) => {
-  console.log("A user connected: " + socket.id);
+socketHandler(io);
 
-  socket.on("sendMessage", (messageData) => {
-    console.log("Message received: ", messageData);
-
-    io.emit("newMessage", messageData);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("A user disconnected: " + socket.id);
-  });
+app.use((error, _req, res, _next) => {
+  const statusCode = error.statusCode || 500;
+  const message = error.message || "Internal Server Error";
+  res.status(statusCode).json({ message });
 });
 
 server.listen(PORT, () => {

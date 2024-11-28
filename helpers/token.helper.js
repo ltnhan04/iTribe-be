@@ -1,4 +1,4 @@
-const RedisHelper = require("../libs/redis");
+const RedisHelper = require("../helpers/redis.helper");
 const jwt = require("jsonwebtoken");
 
 class TokenHelper {

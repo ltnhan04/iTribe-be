@@ -1,6 +1,6 @@
 const XLSX = require("xlsx");
 const fs = require("fs");
-const { uploadImage, deleteImage } = require("../../services/upload.service");
+const { uploadImage, deleteImage } = require("../../helpers/cloudinary.helper");
 const Product = require("../../models/product.model");
 const ProductVariant = require("../../models/productVariant.model");
 

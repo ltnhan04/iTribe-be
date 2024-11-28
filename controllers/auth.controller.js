@@ -7,75 +7,34 @@ const {
   sendPasswordResetEmail,
   sendResetSuccessEmail,
 } = require("../services/nodemailer/email.service");
+const AuthService = require("../services/customer/auth.service");
 const { generateToken, storeRefreshToken } = require("../helpers/token.helper");
+const { setCookie } = require("../helpers/cookie.helper");
 
-const signUp = async (req, res) => {
-  const { email, password, name } = req.body;
+const signUp = async (req, res, next) => {
   try {
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    const verificationCode = Math.floor(100000 + Math.random() * 900000);
-    const createdAt = Date.now();
-
-    await redis.set(
-      `signup:${email}`,
-      JSON.stringify({ name, password, verificationCode, createdAt }),
-      "EX",
-      300
-    );
-
+    const { email, verificationCode } = await AuthService.signUp(req.body);
     await sendVerificationEmail(email, verificationCode);
     res.status(200).json({ message: "Check your email for the OTP" });
   } catch (error) {
-    console.log("Error in signup controller: ", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
+    next(error);
   }
 };
 
-const verifySignUp = async (req, res) => {
-  const { email, otp } = req.body;
+const verifySignUp = async (req, res, next) => {
   try {
-    const storedData = await redis.get(`signup:${email}`);
-    if (!storedData) {
-      return res.status(400).json({ message: "OTP doesn't exist" });
-    }
-
-    const { name, password, verificationCode, createdAt } =
-      JSON.parse(storedData);
-    const timeElapsed = (Date.now() - createdAt) / 1000;
-
-    if (timeElapsed > 60) {
-      return res.status(400).json({ message: "OTP expired" });
-    }
-
-    if (otp !== verificationCode.toString()) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    const user = await User.create({ name, email, password });
-    await redis.del(`signup:${email}`);
-
-    const { accessToken, refreshToken } = generateToken(user._id);
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: process.env.NODE_ENV === "production",
-    });
-    await storeRefreshToken(user._id, refreshToken);
+    const customer = await AuthService.verifyAccount(req.body);
+    const { accessToken, refreshToken } = generateToken(customer._id);
+    setCookie(res, "refreshToken", refreshToken);
+    await storeRefreshToken(customer._id, refreshToken);
 
     res.status(200).json({
       accessToken,
-      name: user.name,
+      name: customer.name,
       message: "Email verified and user created successfully",
     });
   } catch (error) {
-    console.log("Error in verify sign up controller: ", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
+    next(error);
   }
 };
 
