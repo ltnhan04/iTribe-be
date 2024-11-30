@@ -1,7 +1,7 @@
 const RedisHelper = require("../helpers/redis.helper");
 const jwt = require("jsonwebtoken");
 
-class TokenHelper {
+class TokenService {
   static generateToken = (userId) => {
     const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
@@ -16,6 +16,23 @@ class TokenHelper {
     return { accessToken, refreshToken };
   };
 
+  static generateNewToken = (userId) => {
+    const newAccessToken = jwt.sign(
+      { userId },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
+
+    const newRefreshToken = jwt.sign(
+      { userId },
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    return { newAccessToken, newRefreshToken };
+  };
+
   static storeRefreshToken = async (userId, refreshToken) => {
     await RedisHelper.set(
       `refresh_token:${userId}`,
@@ -25,4 +42,4 @@ class TokenHelper {
   };
 }
 
-module.exports = TokenHelper;
+module.exports = TokenService;

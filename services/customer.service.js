@@ -31,6 +31,14 @@ class CustomerService {
     return customer;
   };
 
+  static registeredAccount = async (email) => {
+    const customer = await User.findOne({ email });
+    if (!customer) {
+      throw new AppError("Customer not found", 404);
+    }
+    return customer;
+  };
+
   static createNewCustomer = async (name, email, password) => {
     const customer = await User.create({ name, email, password });
     if (!customer) {
