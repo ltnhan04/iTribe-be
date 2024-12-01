@@ -1,126 +1,71 @@
 const Review = require("../models/reviews.model");
 const ProductVariant = require("../models/productVariant.model");
-const User = require("../models/user.model");
+const ReviewService = require("../services/customer/review.service");
 
-const getReviews = async (_, res) => {
+const getReviews = async (_, res, next) => {
   try {
-    const reviews = await Review.find().populate("user");
+    const reviews = await ReviewService.handleGetReview();
     res.status(200).json({ message: "Reviews fetched successfully", reviews });
   } catch (error) {
-    console.log("Error in getReviews controller", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
+    next(error);
   }
 };
-const createReview = async (req, res) => {
+const createReview = async (req, res, next) => {
   try {
     const { productVariantId, rating, comment, isAnonymous } = req.body;
     const userId = req.user._id;
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const productVariant = await ProductVariant.findById(productVariantId);
-    if (!productVariant) {
-      return res.status(404).json({ message: "Product variant not found" });
-    }
-
-    const existingReview = await Review.findOne({
-      user: userId,
-      productId: productVariantId,
-    });
-    if (existingReview) {
-      return res
-        .status(400)
-        .json({ message: "You have already reviewed this product" });
-    }
-
-    const review = new Review({
-      productId: productVariantId,
-      user: userId,
+    const savedReview = await ReviewService.handleCreateReview(
+      productVariantId,
       rating,
       comment,
       isAnonymous,
-    });
-
-    const savedReview = await review.save();
-    if (!savedReview) {
-      return res.status(400).json({ message: "Failed to create review" });
-    }
-
-    productVariant.reviews.push(savedReview._id);
-    await productVariant.save();
+      userId
+    );
 
     res
       .status(201)
       .json({ message: "Review created successfully", review: savedReview });
   } catch (error) {
-    console.log("Error in createReview controller", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
+    next(error);
   }
 };
 
-const updateReview = async (req, res) => {
+const updateReview = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { rating, comment, isAnonymous } = req.body;
 
-    const review = await Review.findById(id);
-    if (!review) {
-      return res.status(404).json({ message: "Review not found" });
-    }
-
-    if (review.user.toString() !== req.user._id.toString()) {
-      return res
-        .status(403)
-        .json({ message: "You can only update your own reviews" });
-    }
-
-    const updatedReview = await Review.findByIdAndUpdate(
+    const updatedReview = await ReviewService.handleUpdateReview(
       id,
-      { rating, comment, isAnonymous },
-      { new: true }
+      req.user._id,
+      rating,
+      comment,
+      isAnonymous
     );
 
     res
       .status(200)
       .json({ message: "Review updated successfully", review: updatedReview });
   } catch (error) {
-    console.log("Error in updateReview controller", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
+    next(error);
   }
 };
 
-const deleteReview = async (req, res) => {
+const deleteReview = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const review = await Review.findById(id);
-    if (!review) {
-      return res.status(404).json({ message: "Review not found" });
-    }
-
-    if (review.user.toString() !== req.user._id.toString()) {
-      return res
-        .status(403)
-        .json({ message: "You can only delete your own reviews" });
-    }
-
-    await ProductVariant.updateOne(
-      { _id: review.productId },
-      { $pull: { reviews: id } }
+    const deletedReview = await ReviewService.handleDeleteReview(
+      id,
+      req.user._id
     );
 
-    const deletedReview = await Review.findByIdAndDelete(id);
-    if (!deletedReview) {
-      return res.status(404).json({ message: "Review not found" });
-    }
-
-    res.status(200).json({ message: "Review deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Review deleted successfully", review: deletedReview });
   } catch (error) {
-    console.log("Error in deleteReview controller", error.message);
-    res.status(500).json({ message: "Server Error!", error: error.message });
+    next(error);
   }
 };
 

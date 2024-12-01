@@ -1,7 +1,3 @@
-const redis = require("../libs/redis");
-const User = require("../models/user.model");
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 const {
   sendVerificationEmail,
   sendPasswordResetEmail,

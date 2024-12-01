@@ -27,6 +27,22 @@ const promotionSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    maxUsagePerUser: {
+      type: Number,
+      default: 1,
+    },
+    userUsage: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        usageCount: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
     minOrderAmount: {
       type: Number,
       default: 0,

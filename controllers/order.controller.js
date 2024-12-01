@@ -1,4 +1,3 @@
-const Order = require("../models/order.model");
 const OrderService = require("../services/customer/order.service");
 
 const createOrder = async (req, res, next) => {

@@ -1,8 +1,8 @@
 const Order = require("../../models/order.model");
 const User = require("../../models/user.model");
+const ProductVariant = require("../../models/productVariant.model");
 const AppError = require("../../helpers/appError.helper");
 const stripe = require("../../libs/stripe");
-const ProductVariant = require("../../models/productVariant.model");
 
 class OrderService {
   static handleCreateOrder = async ({
