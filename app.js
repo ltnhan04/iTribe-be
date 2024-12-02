@@ -70,7 +70,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/payment", paymentRoutes);
 
-// Admin routes
+// Admin routes 
 app.use("/api/admin/products", productRoutesAdmin);
 app.use("/api/admin/users", userRoutesAdmin);
 app.use("/api/admin/orders", orderRouteAdmin);

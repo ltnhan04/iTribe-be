@@ -49,6 +49,12 @@ class AuthService {
 
   static handleLogin = async ({ email, password, role, res }) => {
     const customer = await this.verifyRole({ email, role });
+    if (!customer.active) {
+      throw new AppError(
+        "Your account has been restricted. Please contact support for assistance",
+        400
+      );
+    }
     if (customer && (await customer.comparePassword(password))) {
       const { accessToken, refreshToken } = generateToken(customer._id);
       setCookie(res, "refreshToken", refreshToken);
@@ -57,7 +63,24 @@ class AuthService {
 
       return { accessToken, name: customer.name, message: "Login success" };
     } else {
-      throw new AppError("Invalid email or password", 400);
+      let wrongPassword = await RedisHelper.get(`wrongPassword:${email}`);
+      wrongPassword = wrongPassword ? parseInt(wrongPassword) : 0;
+      if (wrongPassword >= 5) {
+        customer.active = false;
+        await customer.save();
+        throw new AppError(
+          "You have been restricted for 5 minutes due to multiple failed password attempts.",
+          400
+        );
+      }
+      wrongPassword += 1;
+      await RedisHelper.set(`wrongPassword:${email}`, wrongPassword, 5 * 60);
+      throw new AppError(
+        `Invalid email or password. You have ${
+          5 - wrongPassword
+        } attempts remaining.`,
+        400
+      );
     }
   };
 

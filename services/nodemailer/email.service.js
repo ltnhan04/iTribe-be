@@ -2,7 +2,7 @@ const {
   VERIFICATION_EMAIL_TEMPLATE,
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
-} = require("./templete.service");
+} = require("./template.service");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -51,7 +51,7 @@ const sendPasswordResetEmail = async (email, resetURL) => {
     });
     return info;
   } catch (error) {
-    console.error("Error sending password reset email:", error);
+    console.log("Error sending password reset email:", error);
   }
 };
 
@@ -75,8 +75,7 @@ const sendResetSuccessEmail = async (email) => {
     });
     return info;
   } catch (error) {
-    console.error(`Error sending password reset success email`, error);
-    throw new Error(`Error sending password reset success email:${error} `);
+    console.log(`Error sending password reset success email`, error);
   }
 };
 module.exports = {

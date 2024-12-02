@@ -1,6 +1,5 @@
 const RedisHelper = require("../helpers/redis.helper");
 const AppError = require("../helpers/appError.helper");
-const CustomerService = require("./customer.service");
 
 class OtpService {
   static generateOTP = async () => {
@@ -31,10 +30,31 @@ class OtpService {
     const { name, password, verificationCode } = await this.checkExpiredOtp(
       email
     );
-
-    if (otp !== verificationCode.toString()) {
-      throw new AppError("Invalid OTP", 400);
+    let wrongOtp = await RedisHelper.get(`wrongOtp:${email}`);
+    wrongOtp = wrongOtp ? parseInt(wrongOtp) : 0;
+    if (wrongOtp >= 5) {
+      throw new AppError(
+        "You will be restricted within 5 mins for entering the wrong OTP code more than 5 times",
+        429
+      );
     }
+    if (otp !== verificationCode.toString()) {
+      wrongOtp += 1;
+      if (wrongOtp < 5) {
+        await RedisHelper.set(`wrongOtp:${email}`, wrongOtp, 10 * 60);
+        throw new AppError(
+          `Invalid OTP. You have ${5 - wrongOtp} attempts remaining.`,
+          400
+        );
+      }
+      await RedisHelper.set(`wrongOtp:${email}`, wrongOtp, 5 * 60);
+      throw new AppError(
+        "You have been restricted for 5 minutes due to multiple failed OTP attempts.",
+        429
+      );
+    }
+    await RedisHelper.del(`wrongOtp:${email}`);
+
     return { name, password, email };
   };
 

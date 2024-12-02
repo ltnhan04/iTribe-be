@@ -1,5 +1,3 @@
-const Review = require("../models/reviews.model");
-const ProductVariant = require("../models/productVariant.model");
 const ReviewService = require("../services/customer/review.service");
 
 const getReviews = async (_, res, next) => {
