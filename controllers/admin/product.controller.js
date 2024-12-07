@@ -1,161 +1,70 @@
-const { uploadImage, deleteImage } = require("../../helpers/cloudinary.helper");
-const Product = require("../../models/product.model");
-const ProductVariant = require("../../models/productVariant.model");
+const ProductService = require("../../services/admin/product.service");
 
-const getAllProductsAdmin = async (_, res) => {
+const getAllProductsAdmin = async (_, res, next) => {
   try {
-    const products = await Product.find({}).populate("variants");
-
-    if (!products.length) {
-      return res.status(404).json({ message: "No products found" });
-    }
-
-    const data = await Promise.all(
-      products.map(async (product) => {
-        const firstVariant = await ProductVariant.findOne({
-          productId: product._id,
-        });
-        const price = firstVariant ? firstVariant.price : 0;
-        const firstProduct = firstVariant ? firstVariant.images[0] : null;
-        const newStatus = firstVariant ? "active" : "inactive";
-
-        return {
-          _id: product._id,
-          name: product.name,
-          image: firstProduct,
-          price,
-          status: newStatus,
-        };
-      })
-    );
+    const data = await ProductService.handleGetProducts();
 
     res.status(200).json({ data });
   } catch (error) {
-    console.error("Error in getAllProductsAdmin:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to retrieve products", error: error.message });
+    next(error);
   }
 };
 
-const getProductDetailsAdmin = async (req, res) => {
+const getProductDetailsAdmin = async (req, res, next) => {
   const { id } = req.params;
 
-  if (!id) {
-    return res.status(400).json({ message: "Product ID is required" });
-  }
-
   try {
-    const product = await Product.findById(id).populate({
-      path: "variants",
-      populate: { path: "reviews", model: "Review" },
-    });
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    product.variants = product.variants.map((variant) => {
-      if (variant.reviews && variant.reviews.length > 0) {
-        const totalRating = variant.reviews.reduce(
-          (sum, review) => sum + review.rating,
-          0
-        );
-        variant.rating = (totalRating / variant.reviews.length).toFixed(1);
-      } else {
-        variant.rating = 0;
-      }
-      return variant;
-    });
+    const product = await ProductService.handleGetProductDetails(id);
 
     res.status(200).json({ product });
   } catch (error) {
-    console.error("Error in getProductDetailsAdmin:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 
-const createProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
   const { description, name, slug } = req.body;
 
   try {
-    const product = new Product({
+    const savedProduct = await ProductService.handleCreateProduct(
       description,
       name,
-      slug,
-      image: [],
-    });
-
-    const savedProduct = await product.save();
-    if (!savedProduct) {
-      return res.status(400).json({ message: "Failed to create product" });
-    }
-
+      slug
+    );
     res.status(201).json({
       message: "Product created successfully!",
       product: savedProduct,
     });
   } catch (error) {
-    console.error("Error in createProduct:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
 
-    const product = await Product.findById(id);
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    let imageUrls = product.image;
-
-    if (req.file) {
-      const newImages = await uploadImage(req.file);
-      imageUrls = [...imageUrls, ...newImages];
-    }
-
-    const updatedProduct = await Product.findByIdAndUpdate(
+    const updatedProduct = await ProductService.handleUpdateProduct(
       id,
-      { ...updates, image: imageUrls },
-      { new: true }
+      req.body
     );
-
     res
       .status(200)
       .json({ message: "Updated successfully", product: updatedProduct });
   } catch (error) {
-    console.log("Error in updateProduct controller", error.message);
-    res.status(500).json({ message: "Server Error!" });
+    next(error);
   }
 };
 
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
   const { id } = req.params;
 
-  if (!id) {
-    return res.status(400).json({ message: "Product ID is required" });
-  }
-
   try {
-    await ProductVariant.deleteMany({ productId: id });
+    const product = await ProductService.handleDeleteProduct(id);
 
-    const product = await Product.findByIdAndDelete(id);
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    await deleteImage(product.image);
-
-    res.status(200).json({ message: "Product deleted successfully" });
+    res.status(200).json({ message: "Product deleted successfully", product });
   } catch (error) {
-    console.error("Error in deleteProduct:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 

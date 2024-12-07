@@ -8,7 +8,7 @@ const {
 const { verifyAdmin } = require("../../middleware/auth.middleware");
 
 router.get("/", getAllOrders);
-router.get("/:orderId", getOrderDetail);
 router.get("/paginate", verifyAdmin, getPaginatedOrder);
+router.get("/:orderId", getOrderDetail);
 router.put("/:orderId", verifyAdmin, updateOrderStatus);
 module.exports = router;

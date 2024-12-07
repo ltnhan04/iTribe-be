@@ -2,12 +2,14 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const http = require("http");
+const socketIo = require("socket.io");
+
 const connectDB = require("../libs/db");
+const socketHandler = require("../libs/socket");
 
 dotenv.config();
 const app = express();
-const http = require("http");
-const socketIo = require("socket.io");
 
 // Customer routes
 const authRoutes = require("../routes/auth.route");
@@ -25,6 +27,7 @@ const promotionRoutesAdmin = require("../routes/admin/promotion.route");
 const reviewRoutesAdmin = require("../routes/admin/review.route");
 const revenueRoutesAdmin = require("../routes/admin/revenue.route");
 const notificationRouteAdmin = require("../routes/admin/notification.route");
+const productVariantRouteAdmin = require("../routes/admin/productVariant.route");
 
 // Chat routes
 const chatRoutes = require("../routes/chat.route");
@@ -69,6 +72,7 @@ app.use("/api/payment", paymentRoutes);
 
 // Admin routes
 app.use("/api/admin/products", productRoutesAdmin);
+app.use("/api/admin/products/variant", productVariantRouteAdmin);
 app.use("/api/admin/users", userRoutesAdmin);
 app.use("/api/admin/orders", orderRouteAdmin);
 app.use("/api/admin/reviews", reviewRoutesAdmin);
@@ -79,23 +83,16 @@ app.use("/api/admin/notifications", notificationRouteAdmin);
 // Chat routes
 app.use("/api/chat", chatRoutes);
 
-io.on("connection", (socket) => {
-  console.log("A user connected: " + socket.id);
-
-  socket.on("sendMessage", (messageData) => {
-    console.log("Message received: ", messageData);
-
-    io.emit("newMessage", messageData);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("A user disconnected: " + socket.id);
-  });
+app.use((error, _req, res, _next) => {
+  const statusCode = error.statusCode || 500;
+  const message = error.message || "Internal Server Error";
+  res.status(statusCode).json({ message });
 });
 
 app.get("/", (_, res) => {
   res.send("Hello World!");
 });
+socketHandler(io);
 
 connectDB();
 
