@@ -1,6 +1,6 @@
-const Promotion = require("../../models/promotion.model");
+const PromotionService = require("../../services/admin/promotion.service");
 
-const createPromotion = async (req, res) => {
+const createPromotion = async (req, res, next) => {
   try {
     const {
       code,
@@ -10,79 +10,58 @@ const createPromotion = async (req, res) => {
       maxUsage,
       minOrderAmount,
     } = req.body;
-    const existingPromotion = await Promotion.findOne({ code });
-    if (existingPromotion) {
-      return res.status(400).json({ message: "Promotion code already exists" });
-    }
-
-    const newPromotion = new Promotion({
+    const savedPromotion = await PromotionService.handleCreatePromotion(
       code,
       discountPercentage,
       validFrom,
       validTo,
       maxUsage,
-      minOrderAmount,
-    });
-
-    const savedPromotion = await newPromotion.save();
-
-    if (!savedPromotion) {
-      return res.status(400).json({ message: "Failed to create promotion" });
-    }
-
+      minOrderAmount
+    );
     res
       .status(201)
-      .json({ message: "Promotion created successfully!", newPromotion });
+      .json({ message: "Promotion created successfully!", savedPromotion });
   } catch (error) {
-    console.error("Error in createPromotion:", error.message);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 
-const updatePromotion = async (req, res) => {
+const updatePromotion = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
-    const promotion = await Promotion.findByIdAndUpdate(id, updates, {
-      new: true,
-    });
-
-    if (!promotion) {
-      return res.status(404).json({ message: "Promotion not found" });
-    }
+    const promotion = await PromotionService.handleUpdatePromotion(
+      id,
+      req.body
+    );
 
     res
       .status(200)
       .json({ message: "Promotion updated successfully", promotion });
   } catch (error) {
-    console.error("Error in updatePromotion:", error.message);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 
-const getAllPromotions = async (_, res) => {
+const getAllPromotions = async (_, res, next) => {
   try {
-    const promotions = await Promotion.find();
+    const promotions = await PromotionService.handleGetPromotions();
     res.status(200).json({ promotions });
   } catch (error) {
-    console.error("Error in getAllPromotions:", error.message);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 
-const deletePromotion = async (req, res) => {
+const deletePromotion = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const promotion = await Promotion.findByIdAndDelete(id);
-    if (!promotion) {
-      return res.status(404).json({ message: "Promotion not found" });
-    }
+    const promotion = await PromotionService.handleDeletePromotion(id);
 
-    res.status(200).json({ message: "Promotion deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Promotion deleted successfully", promotion });
   } catch (error) {
-    console.error("Error in deletePromotion:", error.message);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 

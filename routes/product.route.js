@@ -4,23 +4,19 @@ const {
   getAllProductsUser,
   getProductById,
   getProductByName,
-  getRecommendedProducts,
   getPaginatedProducts,
   searchProducts,
   getProductByPriceRange,
-  getProductsByRating,
 } = require("../controllers/product.controller");
 
 router.get("/", getAllProductsUser);
-router.get("/:id", getProductById);
-router.get("/recommendations", getRecommendedProducts);
-router.get("/name/:name", getProductByName);
 
 router.get("/search", searchProducts);
 router.get("/range", getProductByPriceRange);
-router.get("/rating/:rating", getProductsByRating);
 router.get("/paginate", getPaginatedProducts);
 
+router.get("/:id", getProductById);
 router.get("/product/:id", getProductById);
+router.get("/name/:name", getProductByName);
 
 module.exports = router;

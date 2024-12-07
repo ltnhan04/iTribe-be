@@ -1,75 +1,30 @@
 const XLSX = require("xlsx");
 const fs = require("fs");
-const { uploadImage, deleteImage } = require("../../services/upload.services");
+const { uploadImage, deleteImage } = require("../../helpers/cloudinary.helper");
 const Product = require("../../models/product.model");
 const ProductVariant = require("../../models/productVariant.model");
+const ProductVariantService = require("../../services/admin/productVariant.service");
 
-const getAllProductVariants = async (req, res) => {
+const getAllProductVariants = async (req, res, next) => {
   const { productId } = req.params;
   try {
-    const product = await Product.findById(productId).populate("variants");
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-    //   { $match: { productId: mongoose.Types.ObjectId(productId) } },
-    //   {
-    //     $lookup: {
-    //       from: "reviews",
-    //       localField: "_id",
-    //       foreignField: "productId",
-    //       as: "reviews",
-    //     },
-    //   },
-    //   {
-    //     $addFields: {
-    //       averageRating: {
-    //         $cond: {
-    //           if: { $gt: [{ $size: "$reviews" }, 0] },
-    //           then: { $avg: "$reviews.rating" },
-    //           else: 0,
-    //         },
-    //       },
-    //     },
-    //   },
-    //   {
-    //     $project: {
-    //       reviews: 0,
-    //     },
-    //   },
-    // ]);
+    const product = await ProductVariantService.handleGetProductVariants(
+      productId
+    );
 
     res.status(200).json({ variants: product });
   } catch (error) {
-    console.log("Error in getAllProductVariants controller:", error.message);
-    res.status(500).json({ message: "Server Error!" });
+    next(error);
   }
 };
 
-const getProductVariant = async (req, res) => {
+const getProductVariant = async (req, res, next) => {
   const { id } = req.params;
   try {
-    const variant = await ProductVariant.findById(id).populate({
-      path: "reviews",
-      populate: { path: "user", select: "name email" },
-    });
-    if (!variant) {
-      return res.status(404).json({ message: "Product variant not found" });
-    }
-
-    const totalRatings = variant.reviews.reduce(
-      (sum, review) => sum + review.rating,
-      0
-    );
-    const averageRating =
-      variant.reviews.length > 0
-        ? (totalRatings / variant.reviews.length).toFixed(2)
-        : 0;
-
-    variant.rating = averageRating;
+    const variant = await ProductVariantService.handleGetProductVariant(id);
     res.status(200).json({ variant });
   } catch (error) {
-    console.log("Error in getProductVariant controller:", error.message);
-    res.status(500).json({ message: "Server Error!" });
+    next(error);
   }
 };
 
@@ -86,51 +41,29 @@ const createProductVariant = async (req, res) => {
       slug,
     } = req.body;
 
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    let imageUrls = [];
-    if (req.files && req.files.length > 0) {
-      imageUrls = await uploadImage(req.files);
-    }
-
-    const productVariant = new ProductVariant({
-      productId,
-      name,
-      color: { colorName, colorCode },
-      storage,
-      price,
-      stock,
-      slug,
-      images: imageUrls,
-    });
-
-    const savedProductVariant = await productVariant.save();
-    if (!savedProductVariant) {
-      return res
-        .status(400)
-        .json({ message: "Failed to create product variant" });
-    }
-
-    product.variants.push(savedProductVariant._id);
-
-    if (!product.image && imageUrls.length > 0) {
-      product.image = imageUrls[0];
-    }
-    await product.save();
+    const productVariant =
+      await ProductVariantService.handleCreateProductVariant(
+        productId,
+        colorName,
+        colorCode,
+        storage,
+        price,
+        stock,
+        name,
+        slug,
+        req.files
+      );
 
     res.status(201).json({
       message: "Product variant created successfully!",
-      productVariant: savedProductVariant,
+      productVariant,
     });
   } catch (error) {
     console.log("Error in createProductVariant controller:", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-const updateProductVariant = async (req, res) => {
+const updateProductVariant = async (req, res, next) => {
   try {
     const { variantId } = req.params;
     const {
@@ -145,168 +78,65 @@ const updateProductVariant = async (req, res) => {
       productId,
     } = req.body;
 
-    if (!variantId) {
-      return res.status(400).json({ message: "Variant ID is required" });
-    }
-
-    const productVariant = await ProductVariant.findById(variantId);
-    if (!productVariant) {
-      return res.status(404).json({ message: "Product variant not found" });
-    }
-
-    const parsedExistingImages = existingImages
-      ? JSON.parse(existingImages)
-      : [];
-    const imagesToDelete = productVariant.images.filter(
-      (image) => !parsedExistingImages.includes(image)
-    );
-
-    if (imagesToDelete.length > 0) {
-      await deleteImage(imagesToDelete);
-    }
-
-    let newImages = [];
-    if (req.files && req.files.length > 0) {
-      newImages = await uploadImage(req.files);
-    }
-
-    const updatedImages = [...parsedExistingImages, ...newImages];
-
-    const updates = {
-      productId,
-      name,
-      slug,
-      color: { colorName, colorCode },
-      storage,
-      price: Number(price),
-      stock: Number(stock),
-      images: updatedImages,
-    };
-
-    const updatedProductVariant = await ProductVariant.findByIdAndUpdate(
-      variantId,
-      updates,
-      { new: true }
-    );
-
-    if (!updatedProductVariant) {
-      return res
-        .status(404)
-        .json({ message: "Product variant not found after update" });
-    }
+    const updatedProductVariant =
+      await ProductVariantService.handleUpdateProductVariant(
+        variantId,
+        existingImages,
+        colorName,
+        colorCode,
+        storage,
+        price,
+        stock,
+        name,
+        slug,
+        productId,
+        req.files
+      );
 
     res.status(200).json({
       message: "Product variant updated successfully",
       productVariant: updatedProductVariant,
     });
   } catch (error) {
-    console.error("Error in updateProductVariant:", error.message);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 
-const deleteProductVariant = async (req, res) => {
+const deleteProductVariant = async (req, res, next) => {
   const { variantId } = req.params;
 
   try {
-    const productVariant = await ProductVariant.findById(variantId);
-    if (!productVariant) {
-      return res.status(404).json({ message: "Product variant not found" });
-    }
-
-    const productId = productVariant.productId;
-    const product = await Product.findById(productId);
-
-    await ProductVariant.findByIdAndDelete(variantId);
-    await Product.findByIdAndUpdate(productId, {
-      $pull: { variants: variantId },
-    });
-
-    if (product.image === productVariant.images[0]) {
-      const newVariant = await ProductVariant.findOne({ productId });
-      if (newVariant && newVariant.images.length > 0) {
-        product.image = newVariant.images[0];
-      } else {
-        product.image = null;
-      }
-      await product.save();
-    }
-
-    res.status(200).json({ message: "Product variant deleted successfully!" });
+    const { message } = await ProductVariantService.handleDeleteProductVariant(
+      variantId
+    );
+    res.status(200).json({ message });
   } catch (error) {
-    console.error("Error in deleteProductVariant:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 
-const importVariantFromExcel = async (req, res) => {
+const importVariantFromExcel = async (req, res, next) => {
   const { productId } = req.body;
+
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
-
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    const workbook = XLSX.readFile(req.file.path);
-    const sheetName = workbook.SheetNames[0];
-    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-    const variants = sheetData.map((row) => ({
-      productId,
-      name: row["Name"],
-      slug: row["Slug"],
-      color: {
-        colorName: row["Color Name"],
-        colorCode: row["Color Code"],
-      },
-      storage: row["Storage"],
-      price: row["Price"],
-      stock: row["Stock"],
-      images: row["Image URLs"] ? row["Image URLs"].split(",") : [],
-    }));
-
-    const savedVariants = [];
-    for (const variant of variants) {
-      const productVariant = new ProductVariant(variant);
-
-      const savedVariant = await productVariant.save();
-      product.variants.push(savedVariant._id);
-
-      if (!product.image && savedVariant.images.length > 0) {
-        product.image = savedVariant.images[0];
-      }
-
-      savedVariants.push(savedVariant);
-    }
-
-    await product.save();
-
-    fs.unlink(req.file.path, (err) => {
-      if (err) {
-        console.error("Error deleting file:", err);
-      } else {
-        console.log("Temporary file deleted:", req.file.path);
-      }
-    });
+    const savedVariants =
+      await ProductVariantService.handleImportVariantFromExcel(
+        productId,
+        req.file
+      );
 
     res.status(201).json({
       message: "Variants imported successfully!",
       variants: savedVariants,
     });
   } catch (error) {
-    console.error("Error in importVariantsFromExcel:", error.message);
-
     if (req.file && req.file.path) {
       fs.unlink(req.file.path, (err) => {
         if (err) console.error("Error deleting file:", err);
       });
     }
 
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 

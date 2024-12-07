@@ -2,10 +2,11 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const connectDB = require("./libs/db");
 const http = require("http");
 const socketIo = require("socket.io");
 
+const connectDB = require("./libs/db");
+const socketHandler = require("./libs/socket");
 // Customer routes
 const authRoutes = require("./routes/auth.route");
 const productRoutes = require("./routes/product.route");
@@ -22,6 +23,7 @@ const promotionRoutesAdmin = require("./routes/admin/promotion.route");
 const reviewRoutesAdmin = require("./routes/admin/review.route");
 const revenueRoutesAdmin = require("./routes/admin/revenue.route");
 const notificationRouteAdmin = require("./routes/admin/notification.route");
+const productVariantRouteAdmin = require("./routes/admin/productVariant.route");
 
 // Chat routes
 const chatRoutes = require("./routes/chat.route");
@@ -47,7 +49,6 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// Cấu hình CORS
 const corsOptions = {
   origin: [
     "http://localhost:3000",
@@ -72,6 +73,7 @@ app.use("/api/payment", paymentRoutes);
 
 // Admin routes
 app.use("/api/admin/products", productRoutesAdmin);
+app.use("/api/admin/products/variant", productVariantRouteAdmin);
 app.use("/api/admin/users", userRoutesAdmin);
 app.use("/api/admin/orders", orderRouteAdmin);
 app.use("/api/admin/reviews", reviewRoutesAdmin);
@@ -86,18 +88,12 @@ app.get("/", (_, res) => {
   res.send("Hello World!");
 });
 
-io.on("connection", (socket) => {
-  console.log("A user connected: " + socket.id);
+socketHandler(io);
 
-  socket.on("sendMessage", (messageData) => {
-    console.log("Message received: ", messageData);
-
-    io.emit("newMessage", messageData);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("A user disconnected: " + socket.id);
-  });
+app.use((error, _req, res, _next) => {
+  const statusCode = error.statusCode || 500;
+  const message = error.message || "Internal Server Error";
+  res.status(statusCode).json({ message });
 });
 
 server.listen(PORT, () => {

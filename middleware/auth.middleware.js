@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const AppError = require("../helpers/appError.helper");
 const User = require("../models/user.model");
 
 const middlewareController = {
