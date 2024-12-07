@@ -23,6 +23,7 @@ const promotionRoutesAdmin = require("./routes/admin/promotion.route");
 const reviewRoutesAdmin = require("./routes/admin/review.route");
 const revenueRoutesAdmin = require("./routes/admin/revenue.route");
 const notificationRouteAdmin = require("./routes/admin/notification.route");
+const productVariantRouteAdmin = require("./routes/admin/productVariant.route");
 
 // Chat routes
 const chatRoutes = require("./routes/chat.route");
@@ -70,8 +71,9 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/payment", paymentRoutes);
 
-// Admin routes 
+// Admin routes
 app.use("/api/admin/products", productRoutesAdmin);
+app.use("/api/admin/products/variant", productVariantRouteAdmin);
 app.use("/api/admin/users", userRoutesAdmin);
 app.use("/api/admin/orders", orderRouteAdmin);
 app.use("/api/admin/reviews", reviewRoutesAdmin);

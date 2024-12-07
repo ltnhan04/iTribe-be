@@ -3,10 +3,8 @@ const Notification = require("../../models/notification.model")
 
 const getAllNotifications = async (req, res) => {
     try {
-      // Fetch all notifications, sorted by creation date (latest first)
       const notifications = await Notification.find().sort({ createdAt: -1 });
   
-      // Respond with the list of notifications
       res.status(200).json({
         message: "Notifications retrieved successfully",
         notifications,
