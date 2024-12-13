@@ -6,7 +6,6 @@ class PromotionService {
     const promotion = await Promotion.findOne({
       code,
     });
-
     if (!promotion) {
       throw new AppError("Invalid promotion code", 404);
     }
@@ -30,7 +29,7 @@ class PromotionService {
       );
     }
     const userUsage = promotion.userUsage.find(
-      (usage) => usage.userId.toString() === userId.toString()
+      (usage) => usage.userId === userId
     );
     if (userUsage && userUsage.usageCount >= promotion.maxUsagePerUser) {
       throw new AppError(
