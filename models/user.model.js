@@ -35,9 +35,6 @@ const userSchema = new mongoose.Schema(
       city: {
         type: String,
       },
-      postalCode: {
-        type: String,
-      },
       country: {
         type: String,
         default: "Vietnam",

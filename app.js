@@ -14,6 +14,7 @@ const ordersRoutes = require("./routes/order.route");
 const promotionRoutes = require("./routes/promotion.route");
 const reviewRoutes = require("./routes/review.route");
 const paymentRoutes = require("./routes/payment.route");
+const provinceRoutes = require("./routes/province.route");
 
 // Admin routes
 const productRoutesAdmin = require("./routes/admin/product.route");
@@ -70,6 +71,7 @@ app.use("/api/orders", ordersRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api", provinceRoutes);
 
 // Admin routes
 app.use("/api/admin/products", productRoutesAdmin);
