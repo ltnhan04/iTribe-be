@@ -14,6 +14,7 @@ const orderSchema = new mongoose.Schema(
           ref: "ProductVariant",
         },
         quantity: { type: Number, required: true },
+        price: { type: Number, required: true },
       },
     ],
     totalAmount: {
@@ -31,13 +32,13 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["stripe", "pointer-wallet"],
       default: "stripe",
       required: true,
     },
     stripeSessionId: {
       type: String,
       unique: true,
+      default: null,
     },
   },
   { timestamps: true }

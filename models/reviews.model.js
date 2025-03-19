@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const reviewSchema = new mongoose.Schema(
   {
-    productId: {
+    product_variants: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProductVariant",
       required: true,
@@ -16,10 +16,6 @@ const reviewSchema = new mongoose.Schema(
     },
     comment: {
       type: String,
-    },
-    isAnonymous: {
-      type: Boolean,
-      default: false,
     },
   },
   { timestamps: true }

@@ -22,12 +22,11 @@ const userRoutesAdmin = require("./routes/admin/user.route");
 const orderRouteAdmin = require("./routes/admin/order.route");
 const promotionRoutesAdmin = require("./routes/admin/promotion.route");
 const reviewRoutesAdmin = require("./routes/admin/review.route");
-const revenueRoutesAdmin = require("./routes/admin/revenue.route");
 const notificationRouteAdmin = require("./routes/admin/notification.route");
 const productVariantRouteAdmin = require("./routes/admin/productVariant.route");
 
-// Chat routes
-const chatRoutes = require("./routes/chat.route");
+// // Chat routes
+// const chatRoutes = require("./routes/chat.route");
 
 dotenv.config();
 const app = express();
@@ -65,26 +64,23 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Customer routes
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", ordersRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/promotions", promotionRoutes);
-app.use("/api/payment", paymentRoutes);
-app.use("/api", provinceRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/products", productRoutes);
+app.use("/api/v1/orders", ordersRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/promotions", promotionRoutes);
+app.use("/api/v1/payment", paymentRoutes);
+// app.use("/api/v1/chat", chatRoutes);
+app.use("/api/v1", provinceRoutes);
 
 // Admin routes
-app.use("/api/admin/products", productRoutesAdmin);
-app.use("/api/admin/products/variant", productVariantRouteAdmin);
-app.use("/api/admin/users", userRoutesAdmin);
-app.use("/api/admin/orders", orderRouteAdmin);
-app.use("/api/admin/reviews", reviewRoutesAdmin);
-app.use("/api/admin/promotions", promotionRoutesAdmin);
-app.use("/api/admin/revenue", revenueRoutesAdmin);
-app.use("/api/admin/notifications", notificationRouteAdmin);
-
-// Chat routes
-app.use("/api/chat", chatRoutes);
+app.use("/api/v1/admin/products", productRoutesAdmin);
+app.use("/api/v1/admin/products/variant", productVariantRouteAdmin);
+app.use("/api/v1/admin/users", userRoutesAdmin);
+app.use("/api/v1/admin/orders", orderRouteAdmin);
+app.use("/api/v1/admin/reviews", reviewRoutesAdmin);
+app.use("/api/v1/admin/promotions", promotionRoutesAdmin);
+app.use("/api/v1/admin/notifications", notificationRouteAdmin);
 
 app.get("/", (_, res) => {
   res.send("Hello World!");

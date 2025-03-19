@@ -7,33 +7,34 @@ const promotionSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    discountPercentage: {
-      type: Number,
+    discount_type: {
+      type: String,
+      enum: ["amount", "percentage"],
       required: true,
     },
-    validFrom: {
+    valid_from: {
       type: Date,
       required: true,
     },
-    validTo: {
+    valid_to: {
       type: Date,
       required: true,
     },
-    isActive: {
+    is_active: {
       type: Boolean,
       default: true,
     },
-    maxUsage: {
+    max_usage: {
       type: Number,
       default: 1,
     },
-    maxUsagePerUser: {
+    max_usage_per_user: {
       type: Number,
       default: 1,
     },
-    userUsage: [
+    user_usage: [
       {
-        userId: {
+        user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
         },
@@ -43,14 +44,27 @@ const promotionSchema = new mongoose.Schema(
         },
       },
     ],
-    minOrderAmount: {
+
+    min_order_amount: {
       type: Number,
       default: 0,
     },
-    usedCount: {
+    used_count: {
       type: Number,
       default: 0,
     },
+    applicable_category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+    },
+    applicable_products: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ProductVariant",
+        default: [],
+      },
+    ],
   },
   { timestamps: true }
 );

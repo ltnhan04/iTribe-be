@@ -1,47 +1,28 @@
-// const mongoose = require("mongoose");
-// const notificationSchema = new mongoose.Schema(
-//   {
-//     message: {
-//       type: String,
-//       required: true,
-//     },
-//     type: {
-//       type: String,
-//       enum: ["order", "promotion", "general"],
-//       required: true,
-//     },
-//     isRead: {
-//       type: Boolean,
-//       default: false,
-//     },
-//   },
-//   productVariantId: { // New field for referencing the product variant
-//     type: mongoose.Schema.Types.ObjectId,
-//     ref: "ProductVariant",
-//   },
-//   { timestamps: true }
-// );
-// module.exports = mongoose.model("Notification", notificationSchema);
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema(
   {
-    message: {
-      type: String,
-      required: true,
-    },
+    message: { type: String, required: true },
     type: {
       type: String,
-      enum: ["order", "promotion", "general"],
+      enum: ["order", "promotion", "productVariant"],
       required: true,
     },
-    isRead: {
-      type: Boolean,
-      default: false,
-    },
-    productVariantId: { // New field for referencing the product variant
+    is_read: { type: Boolean, default: false },
+    product_variant_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProductVariant",
+      default: null,
+    },
+    order_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+    },
+    promotion_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Promotion",
+      default: null,
     },
   },
   { timestamps: true }
