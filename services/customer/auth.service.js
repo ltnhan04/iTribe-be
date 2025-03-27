@@ -10,6 +10,7 @@ const {
   generateNewToken,
 } = require("../token.service");
 const { setCookie } = require("../../helpers/cookie.helper");
+const PromotionService = require("./promotion.service");
 
 class AuthService {
   static signUp = async ({ name, email, password }) => {
@@ -23,6 +24,7 @@ class AuthService {
     return { email, verificationCode };
   };
 
+
   static verifyAccount = async ({ email, otp }) => {
     const { name, password } = await OtpService.verifyOtp(email, otp);
     const customer = await CustomerService.createNewCustomer(
@@ -30,8 +32,11 @@ class AuthService {
       email,
       password
     );
+    // Tạo voucher freeship cho user mới
+    await PromotionService.createFirstOrderFreeShipPromotion(customer._id);
     return customer;
   };
+
   static handleResendOtp = async (email) => {
     await CustomerService.findCustomerByEmail(email);
     const { verificationCode } = await OtpService.checkCountOtp(email);
@@ -76,8 +81,7 @@ class AuthService {
       wrongPassword += 1;
       await RedisHelper.set(`wrongPassword:${email}`, wrongPassword, 5 * 60);
       throw new AppError(
-        `Invalid email or password. You have ${
-          5 - wrongPassword
+        `Invalid email or password. You have ${5 - wrongPassword
         } attempts remaining.`,
         400
       );

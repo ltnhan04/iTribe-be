@@ -32,6 +32,8 @@ const verifySignUp = async (req, res, next) => {
       accessToken,
       name: customer.name,
       message: "Email verified and user created successfully",
+      //Thêm voucher free ship
+      freeShipPromotion: customer.freeShipPromotion
     });
   } catch (error) {
     next(error);
