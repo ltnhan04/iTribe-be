@@ -93,9 +93,51 @@ const PASSWORD_RESET_REQUEST_TEMPLATE = `
 </body>
 </html>
 `;
+//Xác nhận đơn hàng
+const ORDER_CONFIRMATION_TEMPLATE = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmation</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(to right, #A3AAAE, #E0E0E0); padding: 20px; text-align: center;">
+    <h1 style="color: #333; margin: 0;">Đơn hàng đã giao thành công!</h1>
+  </div>
+  <div style="background-color: #F2F2F5; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <p>Xin chào {customerName},</p>
+    <p>Đơn hàng của bạn đã được giao thành công. Dưới đây là thông tin chi tiết đơn hàng:</p>
+    
+    <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <p><strong>Mã đơn hàng:</strong> {orderId}</p>
+      <p><strong>Ngày đặt:</strong> {orderDate}</p>
+      <p><strong>Ngày giao:</strong> {deliveryDate}</p>
+      <p><strong>Tổng tiền:</strong> {totalAmount} VND</p>
+    </div>
+
+    <h3 style="color: #333;">Chi tiết sản phẩm:</h3>
+    {orderItems}
+
+    <div style="margin-top: 20px;">
+      <p><strong>Địa chỉ giao hàng:</strong></p>
+      <p>{shippingAddress}</p>
+    </div>
+
+    <p style="margin-top: 20px;">Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.</p>
+    <p>Trân trọng,<br>Đội ngũ iTribe</p>
+  </div>
+  <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.8em;">
+    <p>This is an automated message, please do not reply to this email.</p>
+  </div>
+</body>
+</html>
+`;
 
 module.exports = {
   VERIFICATION_EMAIL_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
   PASSWORD_RESET_REQUEST_TEMPLATE,
+  ORDER_CONFIRMATION_TEMPLATE,
 };

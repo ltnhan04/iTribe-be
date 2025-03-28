@@ -15,7 +15,10 @@ const promotionRoutes = require("./routes/promotion.route");
 const reviewRoutes = require("./routes/review.route");
 const paymentRoutes = require("./routes/payment.route");
 const provinceRoutes = require("./routes/province.route");
-
+const shippingRoutes = require("./routes/shipping.route");
+const pointRoutes = require("./routes/point.route");
+const recommendationRoutes = require("./routes/customer/recommendation.route");
+require('./libs/passport');
 // Admin routes
 const productRoutesAdmin = require("./routes/admin/product.route");
 const userRoutesAdmin = require("./routes/admin/user.route");
@@ -24,6 +27,7 @@ const promotionRoutesAdmin = require("./routes/admin/promotion.route");
 const reviewRoutesAdmin = require("./routes/admin/review.route");
 const notificationRouteAdmin = require("./routes/admin/notification.route");
 const productVariantRouteAdmin = require("./routes/admin/productVariant.route");
+const adminCategoryRoutes = require("./routes/admin/category.route");
 
 // // Chat routes
 // const chatRoutes = require("./routes/chat.route");
@@ -70,6 +74,12 @@ app.use("/api/v1/orders", ordersRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/promotions", promotionRoutes);
 app.use("/api/v1/payment", paymentRoutes);
+// Shipping routes
+app.use("/api/v1/shipping", shippingRoutes);
+// Point routes
+app.use("/api/v1/points", pointRoutes);
+// Recommendation routes
+app.use("/api/v1/recommendations", recommendationRoutes);
 // app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1", provinceRoutes);
 
@@ -81,6 +91,7 @@ app.use("/api/v1/admin/orders", orderRouteAdmin);
 app.use("/api/v1/admin/reviews", reviewRoutesAdmin);
 app.use("/api/v1/admin/promotions", promotionRoutesAdmin);
 app.use("/api/v1/admin/notifications", notificationRouteAdmin);
+app.use("/api/v1/admin/categories", adminCategoryRoutes);
 
 app.get("/", (_, res) => {
   res.send("Hello World!");
