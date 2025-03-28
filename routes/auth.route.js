@@ -10,11 +10,15 @@ const {
   forgotPassword,
   resetPassword,
   resentOTP,
+  loginWithGoogle,
+  googleCallback,
 } = require("../controllers/auth.controller");
 const { verifyToken } = require("../middleware/auth.middleware");
 const router = express.Router();
 
 router.post("/signup", signUp);
+router.get("/login-google", loginWithGoogle);
+router.get("/login-google/callback", googleCallback);
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/profile", verifyToken, getProfile);

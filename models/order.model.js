@@ -32,7 +32,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      default: "stripe",
+      enum: ["stripe","ship-cod","momo"],
       required: true,
     },
     stripeSessionId: {
