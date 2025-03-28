@@ -9,7 +9,7 @@ const getShippingMethods = async (req, res, next) => {
       throw new AppError("Province is required", 400);
     }
 
-    const methods = await ShippingService.getShippingMethods(province);
+    const methods = await ShippingService.getShippingMethods(province.replace(/"/g, ''));
     res.status(200).json({
       message: "Shipping methods retrieved successfully",
       data: methods
@@ -27,7 +27,7 @@ const calculateShippingFee = async (req, res, next) => {
       throw new AppError("Method ID and province are required", 400);
     }
 
-    const fee = await ShippingService.calculateShippingFee(methodId, province);
+    const fee = await ShippingService.calculateShippingFee(methodId, province.replace(/"/g, ''));
     res.status(200).json({
       message: "Shipping fee calculated successfully",
       data: { fee }
