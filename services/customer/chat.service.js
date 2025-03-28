@@ -1,4 +1,4 @@
-const Chat = require("../../models/chat.model");
+const Chat = require("../../models/message.model");
 const AppError = require("../../helpers/appError.helper");
 
 class ChatService {

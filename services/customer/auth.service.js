@@ -49,12 +49,6 @@ class AuthService {
 
   static handleLogin = async ({ email, password, role, res }) => {
     const customer = await this.verifyRole({ email, role });
-    if (!customer.active) {
-      throw new AppError(
-        "Your account has been restricted. Please contact support for assistance",
-        400
-      );
-    }
     if (customer && (await customer.comparePassword(password))) {
       const { accessToken, refreshToken } = generateToken(customer._id);
       setCookie(res, "refreshToken", refreshToken);
