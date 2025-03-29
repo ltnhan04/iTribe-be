@@ -10,6 +10,16 @@ const {
   generateNewToken,
 } = require("../token.service");
 const { setCookie } = require("../../helpers/cookie.helper");
+const PromotionService = require("./promotion.service");
+const User = require("../../models/user.model");
+const { OAuth2Client } = require('google-auth-library');
+const { sendVerificationEmail } = require("../nodemailer/email.service");
+
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
 
 class AuthService {
   static signUp = async ({ name, email, password }) => {
@@ -23,6 +33,56 @@ class AuthService {
     return { email, verificationCode };
   };
 
+  static async verifyGoogleToken(token) {
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+      return ticket.getPayload();
+    } catch (error) {
+      throw new AppError('Invalid Google token', 401);
+    }
+  }
+
+  //Đăng nhập với google  
+  static async loginWithGoogle(googleUser) {
+    try {
+      // Tìm user theo email
+      let user = await User.findOne({ email: googleUser.email });
+
+      if (!user) {
+        // Tạo user mới nếu chưa tồn tại
+        user = await User.create({
+          email: googleUser.email,
+          name: googleUser.name,
+          avatar: googleUser.picture,
+          isEmailVerified: true, // Email từ Google đã được xác thực
+          googleId: googleUser.sub
+        });
+      }
+
+      // Tạo JWT token
+      const token = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN }
+      );
+
+      return {
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar
+        }
+      };
+    } catch (error) {
+      throw new AppError('Error during Google authentication', 500);
+    }
+  }
+  //Xác nhận tài khoản
   static verifyAccount = async ({ email, otp }) => {
     const { name, password } = await OtpService.verifyOtp(email, otp);
     const customer = await CustomerService.createNewCustomer(
@@ -30,8 +90,11 @@ class AuthService {
       email,
       password
     );
+    // Tạo voucher freeship cho user mới
+    await PromotionService.createFirstOrderFreeShipPromotion(customer._id);
     return customer;
   };
+
   static handleResendOtp = async (email) => {
     await CustomerService.findCustomerByEmail(email);
     const { verificationCode } = await OtpService.checkCountOtp(email);
@@ -49,7 +112,7 @@ class AuthService {
 
   static handleLogin = async ({ email, password, role, res }) => {
     const customer = await this.verifyRole({ email, role });
-    if (!customer.active) {
+    if (!customer) {
       throw new AppError(
         "Your account has been restricted. Please contact support for assistance",
         400
@@ -76,8 +139,7 @@ class AuthService {
       wrongPassword += 1;
       await RedisHelper.set(`wrongPassword:${email}`, wrongPassword, 5 * 60);
       throw new AppError(
-        `Invalid email or password. You have ${
-          5 - wrongPassword
+        `Invalid email or password. You have ${5 - wrongPassword
         } attempts remaining.`,
         400
       );

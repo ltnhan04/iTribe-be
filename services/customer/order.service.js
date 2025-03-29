@@ -3,6 +3,8 @@ const User = require("../../models/user.model");
 const ProductVariant = require("../../models/productVariant.model");
 const AppError = require("../../helpers/appError.helper");
 const stripe = require("../../libs/stripe");
+const PointService = require("./point.service");
+const { sendOrderConfirmationEmail } = require("../nodemailer/email.service");
 
 class OrderService {
   static handleCreateOrder = async ({
@@ -107,6 +109,38 @@ class OrderService {
 
     return { message: "Order updated successfully", updatedOrder };
   };
+
+  static async updateOrderStatus(orderId, status) {
+    try {
+      const order = await Order.findById(orderId)
+        .populate({
+          path: "productVariants.productVariant",
+          select: "name price"
+        })
+        .populate("user", "name email");
+
+      if (!order) {
+        throw new AppError("Order not found", 404);
+      }
+
+      order.status = status;
+      await order.save();
+
+      // Tích điểm và gửi email khi đơn hàng hoàn thành
+      if (status === "completed") {
+        // Tích điểm
+        await PointService.addPointsForOrder(order);
+
+        // Gửi email xác nhận
+        await sendOrderConfirmationEmail(order, order.user);
+      }
+
+      return order;
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      throw error;
+    }
+  }
 }
 
 module.exports = OrderService;

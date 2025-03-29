@@ -15,47 +15,21 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: [false, "Password is required"],
     },
     phoneNumber: {
       type: String,
-      unique: true,
+      unique: false,
       sparse: true,
     },
     address: {
-      street: {
-        type: String,
-      },
-      ward: {
-        type: String,
-      },
-      district: {
-        type: String,
-      },
-      city: {
-        type: String,
-      },
-      country: {
-        type: String,
-        default: "Vietnam",
-      },
+      type: String,
     },
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
     },
-    active: {
-      type: Boolean,
-      enum: ["true", "false"],
-      default: true,
-    },
-    orderHistory: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Order",
-      },
-    ],
   },
   {
     timestamps: true,
