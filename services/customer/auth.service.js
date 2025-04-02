@@ -12,7 +12,7 @@ const {
 const { setCookie } = require("../../helpers/cookie.helper");
 const PromotionService = require("./promotion.service");
 const User = require("../../models/user.model");
-const { OAuth2Client } = require('google-auth-library');
+const { OAuth2Client } = require("google-auth-library");
 const { sendVerificationEmail } = require("../nodemailer/email.service");
 
 const googleClient = new OAuth2Client(
@@ -37,15 +37,15 @@ class AuthService {
     try {
       const ticket = await googleClient.verifyIdToken({
         idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID
+        audience: process.env.GOOGLE_CLIENT_ID,
       });
       return ticket.getPayload();
     } catch (error) {
-      throw new AppError('Invalid Google token', 401);
+      throw new AppError("Invalid Google token", 401);
     }
   }
 
-  //Đăng nhập với google  
+  //Đăng nhập với google
   static async loginWithGoogle(googleUser) {
     try {
       // Tìm user theo email
@@ -58,16 +58,14 @@ class AuthService {
           name: googleUser.name,
           avatar: googleUser.picture,
           isEmailVerified: true, // Email từ Google đã được xác thực
-          googleId: googleUser.sub
+          googleId: googleUser.sub,
         });
       }
 
       // Tạo JWT token
-      const token = jwt.sign(
-        { id: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN }
-      );
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN,
+      });
 
       return {
         token,
@@ -75,11 +73,11 @@ class AuthService {
           id: user._id,
           name: user.name,
           email: user.email,
-          avatar: user.avatar
-        }
+          avatar: user.avatar,
+        },
       };
     } catch (error) {
-      throw new AppError('Error during Google authentication', 500);
+      throw new AppError("Error during Google authentication", 500);
     }
   }
   //Xác nhận tài khoản
@@ -112,12 +110,6 @@ class AuthService {
 
   static handleLogin = async ({ email, password, role, res }) => {
     const customer = await this.verifyRole({ email, role });
-    if (!customer) {
-      throw new AppError(
-        "Your account has been restricted. Please contact support for assistance",
-        400
-      );
-    }
     if (customer && (await customer.comparePassword(password))) {
       const { accessToken, refreshToken } = generateToken(customer._id);
       setCookie(res, "refreshToken", refreshToken);
@@ -139,7 +131,8 @@ class AuthService {
       wrongPassword += 1;
       await RedisHelper.set(`wrongPassword:${email}`, wrongPassword, 5 * 60);
       throw new AppError(
-        `Invalid email or password. You have ${5 - wrongPassword
+        `Invalid email or password. You have ${
+          5 - wrongPassword
         } attempts remaining.`,
         400
       );

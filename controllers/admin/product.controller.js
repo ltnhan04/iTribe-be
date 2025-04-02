@@ -1,11 +1,25 @@
 const ProductService = require("../../services/admin/product.service");
 
+const getProductsByCategory = async (req, res, next) => {
+  try {
+    const { categoryId } = req.query;
+    const products = await ProductService.handleGetProductByCategory(
+      categoryId
+    );
+    res.status(200).json({
+      message: "Get Products Successfully",
+      data: products,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 const getAllProductsAdmin = async (_, res, next) => {
   try {
     const products = await ProductService.handleGetProducts();
-    res.status(200).json({ 
-      status: 'success',
-      data: products 
+    res.status(200).json({
+      message: "Get Products Successfully",
+      data: products,
     });
   } catch (error) {
     next(error);
@@ -17,9 +31,9 @@ const getProductDetailsAdmin = async (req, res, next) => {
 
   try {
     const product = await ProductService.handleGetProductDetails(id);
-    res.status(200).json({ 
-      status: 'success',
-      data: product 
+    res.status(200).json({
+      message: "Get Product Info Successfully",
+      data: product,
     });
   } catch (error) {
     next(error);
@@ -36,7 +50,6 @@ const createProduct = async (req, res, next) => {
       category
     );
     res.status(201).json({
-      status: 'success',
       message: "Product created successfully!",
       data: savedProduct,
     });
@@ -52,10 +65,9 @@ const updateProduct = async (req, res, next) => {
       id,
       req.body
     );
-    res.status(200).json({ 
-      status: 'success',
-      message: "Product updated successfully", 
-      data: updatedProduct 
+    res.status(200).json({
+      message: "Product updated successfully",
+      data: updatedProduct,
     });
   } catch (error) {
     next(error);
@@ -67,9 +79,8 @@ const deleteProduct = async (req, res, next) => {
 
   try {
     const result = await ProductService.handleDeleteProduct(id);
-    res.status(200).json({ 
-      status: 'success',
-      message: result.message 
+    res.status(200).json({
+      message: result.message,
     });
   } catch (error) {
     next(error);
@@ -78,6 +89,7 @@ const deleteProduct = async (req, res, next) => {
 
 module.exports = {
   getAllProductsAdmin,
+  getProductsByCategory,
   getProductDetailsAdmin,
   createProduct,
   updateProduct,

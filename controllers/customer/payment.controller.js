@@ -1,4 +1,4 @@
-const PaymentService = require("../services/customer/payment.service");
+const PaymentService = require("../../services/customer/payment.service");
 
 const createCheckoutSession = async (req, res, next) => {
   try {

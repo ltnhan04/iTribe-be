@@ -2,15 +2,15 @@ const {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendResetSuccessEmail,
-} = require("../services/nodemailer/email.service");
-const AuthService = require("../services/customer/auth.service");
+} = require("../../services/nodemailer/email.service");
+const AuthService = require("../../services/customer/auth.service");
 const {
   generateToken,
   storeRefreshToken,
-} = require("../services/token.service");
-const { setCookie } = require("../helpers/cookie.helper");
-const CustomerService = require("../services/customer.service");
-const passport = require("passport")
+} = require("../../services/token.service");
+const { setCookie } = require("../../helpers/cookie.helper");
+const CustomerService = require("../../services/customer.service");
+const passport = require("passport");
 
 const signUp = async (req, res, next) => {
   try {
@@ -23,20 +23,23 @@ const signUp = async (req, res, next) => {
 };
 
 const loginWithGoogle = async (req, res, next) => {
-  passport.authenticate('google', { scope: ['email', 'profile'] })(req, res, next);
-}
+  passport.authenticate("google", { scope: ["email", "profile"] })(
+    req,
+    res,
+    next
+  );
+};
 const googleCallback = async (req, res, next) => {
-  passport.authenticate('google', {session: false}, async (err, user) => {
-    if(err || !user) {
-      return res.redirect('http://localhost:5173/login');
+  passport.authenticate("google", { session: false }, async (err, user) => {
+    if (err || !user) {
+      return res.redirect("http://localhost:5173/login");
     }
-    const {accessToken, refreshToken} = generateToken(user._id);
+    const { accessToken, refreshToken } = generateToken(user._id);
     setCookie(res, "refreshToken", refreshToken);
     await storeRefreshToken(user._id, refreshToken);
     return res.redirect(`http://localhost:5173/home`);
-
   })(req, res, next);
-}
+};
 
 const verifySignUp = async (req, res, next) => {
   try {
@@ -50,7 +53,7 @@ const verifySignUp = async (req, res, next) => {
       name: customer.name,
       message: "Email verified and user created successfully",
       //Thêm voucher free ship
-      freeShipPromotion: customer.freeShipPromotion
+      freeShipPromotion: customer.freeShipPromotion,
     });
   } catch (error) {
     next(error);

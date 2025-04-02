@@ -1,11 +1,11 @@
 const router = require("express").Router();
-const { 
+const {
   createCheckoutSession,
   createMomoPayment,
   handleMomoCallback,
-  transactionStatus
-} = require("../controllers/payment.controller");
-const { verifyToken } = require("../middleware/auth.middleware");
+  transactionStatus,
+} = require("../../controllers/customer/payment.controller");
+const { verifyToken } = require("../../middleware/auth.middleware");
 
 // Stripe payment routes
 router.post("/create-checkout-session", verifyToken, createCheckoutSession);

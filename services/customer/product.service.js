@@ -6,10 +6,10 @@ class ProductService {
   static handleGetProducts = async () => {
     const products = await Product.find({}).populate({
       path: "variants",
-      select: "color storage price stock_quantity images rating"
+      select: "color storage price stock_quantity images rating",
     });
 
-    const data = products.map(product => {
+    const data = products.map((product) => {
       const firstVariant = product.variants[0];
       return {
         _id: product._id,
@@ -17,11 +17,11 @@ class ProductService {
         description: product.description,
         category: product.category,
         price: firstVariant ? firstVariant.price : 0,
-        colors: [...new Set(product.variants.map(v => v.color.colorName))],
-        storages: [...new Set(product.variants.map(v => v.storage))],
+        colors: [...new Set(product.variants.map((v) => v.color.colorName))],
+        storages: [...new Set(product.variants.map((v) => v.storage))],
         image: firstVariant?.images[0] || null,
         rating: firstVariant?.rating || 0,
-        stock: firstVariant?.stock_quantity || 0
+        stock: firstVariant?.stock_quantity || 0,
       };
     });
 
@@ -35,19 +35,21 @@ class ProductService {
         path: "reviews",
         populate: {
           path: "user",
-          select: "name email"
-        }
-      }
+          select: "name email",
+        },
+      },
     });
 
     if (!product) {
       throw new AppError("Product not found", 404);
     }
 
-    // Tính toán rating trung bình cho mỗi variant
-    product.variants = product.variants.map(variant => {
+    product.variants = product.variants.map((variant) => {
       if (variant.reviews && variant.reviews.length > 0) {
-        const totalRating = variant.reviews.reduce((sum, review) => sum + review.rating, 0);
+        const totalRating = variant.reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
         variant.rating = (totalRating / variant.reviews.length).toFixed(1);
       }
       return variant;
@@ -58,17 +60,17 @@ class ProductService {
 
   static handleGetProductByName = async (name) => {
     const products = await Product.find({
-      name: { $regex: name, $options: "i" }
+      name: { $regex: name, $options: "i" },
     }).populate({
       path: "variants",
-      select: "color storage price stock_quantity images rating"
+      select: "color storage price stock_quantity images rating",
     });
 
     if (products.length === 0) {
       throw new AppError("Product not found", 404);
     }
 
-    return products.map(product => {
+    return products.map((product) => {
       const firstVariant = product.variants[0];
       return {
         _id: product._id,
@@ -76,11 +78,11 @@ class ProductService {
         description: product.description,
         category: product.category,
         price: firstVariant ? firstVariant.price : 0,
-        colors: [...new Set(product.variants.map(v => v.color.colorName))],
-        storages: [...new Set(product.variants.map(v => v.storage))],
+        colors: [...new Set(product.variants.map((v) => v.color.colorName))],
+        storages: [...new Set(product.variants.map((v) => v.storage))],
         image: firstVariant?.images[0] || null,
         rating: firstVariant?.rating || 0,
-        stock: firstVariant?.stock_quantity || 0
+        stock: firstVariant?.stock_quantity || 0,
       };
     });
   };
@@ -89,18 +91,18 @@ class ProductService {
     const products = await Product.find({
       $or: [
         { name: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } }
-      ]
+        { description: { $regex: query, $options: "i" } },
+      ],
     }).populate({
       path: "variants",
-      select: "color storage price stock_quantity images rating"
+      select: "color storage price stock_quantity images rating",
     });
 
     if (!products || products.length === 0) {
       throw new AppError("Products not found", 404);
     }
 
-    return products.map(product => {
+    return products.map((product) => {
       const firstVariant = product.variants[0];
       return {
         _id: product._id,
@@ -108,28 +110,28 @@ class ProductService {
         description: product.description,
         category: product.category,
         price: firstVariant ? firstVariant.price : 0,
-        colors: [...new Set(product.variants.map(v => v.color.colorName))],
-        storages: [...new Set(product.variants.map(v => v.storage))],
+        colors: [...new Set(product.variants.map((v) => v.color.colorName))],
+        storages: [...new Set(product.variants.map((v) => v.storage))],
         image: firstVariant?.images[0] || null,
         rating: firstVariant?.rating || 0,
-        stock: firstVariant?.stock_quantity || 0
+        stock: firstVariant?.stock_quantity || 0,
       };
     });
   };
 
   static handleGetProductByRange = async (min, max) => {
     const variants = await ProductVariant.find({
-      price: { $gte: min, $lte: max || Infinity }
+      price: { $gte: min, $lte: max || Infinity },
     }).populate({
       path: "product",
-      select: "name description category"
+      select: "name description category",
     });
 
     if (!variants || variants.length === 0) {
       throw new AppError("Products not found", 404);
     }
 
-    return variants.map(variant => ({
+    return variants.map((variant) => ({
       _id: variant._id,
       productId: variant.product._id,
       name: variant.product.name,
@@ -141,7 +143,7 @@ class ProductService {
       stock: variant.stock_quantity,
       images: variant.images,
       rating: variant.rating,
-      slug: variant.slug
+      slug: variant.slug,
     }));
   };
 
@@ -150,12 +152,12 @@ class ProductService {
     const products = await Product.find()
       .populate({
         path: "variants",
-        select: "color storage price stock_quantity images rating"
+        select: "color storage price stock_quantity images rating",
       })
       .skip(skip)
       .limit(parseInt(limit));
 
-    return products.map(product => {
+    return products.map((product) => {
       const firstVariant = product.variants[0];
       return {
         _id: product._id,
@@ -163,11 +165,11 @@ class ProductService {
         description: product.description,
         category: product.category,
         price: firstVariant ? firstVariant.price : 0,
-        colors: [...new Set(product.variants.map(v => v.color.colorName))],
-        storages: [...new Set(product.variants.map(v => v.storage))],
+        colors: [...new Set(product.variants.map((v) => v.color.colorName))],
+        storages: [...new Set(product.variants.map((v) => v.storage))],
         image: firstVariant?.images[0] || null,
         rating: firstVariant?.rating || 0,
-        stock: firstVariant?.stock_quantity || 0
+        stock: firstVariant?.stock_quantity || 0,
       };
     });
   };

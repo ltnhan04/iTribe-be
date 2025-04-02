@@ -8,17 +8,17 @@ const socketIo = require("socket.io");
 const connectDB = require("./libs/db");
 const socketHandler = require("./libs/socket");
 // Customer routes
-const authRoutes = require("./routes/auth.route");
-const productRoutes = require("./routes/product.route");
-const ordersRoutes = require("./routes/order.route");
-const promotionRoutes = require("./routes/promotion.route");
-const reviewRoutes = require("./routes/review.route");
-const paymentRoutes = require("./routes/payment.route");
-const provinceRoutes = require("./routes/province.route");
-const shippingRoutes = require("./routes/shipping.route");
-const pointRoutes = require("./routes/point.route");
+const authRoutes = require("./routes/customer/auth.route");
+const productRoutes = require("./routes/customer/product.route");
+const ordersRoutes = require("./routes/customer/order.route");
+const promotionRoutes = require("./routes/customer/promotion.route");
+const reviewRoutes = require("./routes/customer/review.route");
+const paymentRoutes = require("./routes/customer/payment.route");
+const provinceRoutes = require("./routes/customer/province.route");
+const shippingRoutes = require("./routes/customer/shipping.route");
+const pointRoutes = require("./routes/customer/point.route");
 const recommendationRoutes = require("./routes/customer/recommendation.route");
-require('./libs/passport');
+require("./libs/passport");
 // Admin routes
 const productRoutesAdmin = require("./routes/admin/product.route");
 const userRoutesAdmin = require("./routes/admin/user.route");

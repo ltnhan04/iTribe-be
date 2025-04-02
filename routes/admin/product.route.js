@@ -10,11 +10,12 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  getProductsByCategory,
 } = require("../../controllers/admin/product.controller");
 
-router.get("/", verifyAdmin, getAllProductsAdmin);
+router.get("/filter", verifyAdmin, getProductsByCategory);
 router.get("/:id", verifyAdmin, getProductDetailsAdmin);
-
+router.get("/", verifyAdmin, getAllProductsAdmin);
 router.post("/", verifyAdmin, createProduct);
 router.put("/:id", verifyAdmin, upload.single("image"), updateProduct);
 router.delete("/:id", verifyAdmin, deleteProduct);

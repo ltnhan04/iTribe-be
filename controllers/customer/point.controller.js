@@ -1,12 +1,12 @@
-const PointService = require("../services/customer/point.service");
-const AppError = require("../helpers/appError.helper");
+const PointService = require("../../services/customer/point.service");
+const AppError = require("../../helpers/appError.helper");
 //Lấy số điểm của user
 const getCustomerPoints = async (req, res, next) => {
   try {
     const points = await PointService.getCustomerPoints(req.user._id);
     res.status(200).json({
       message: "Customer points retrieved successfully",
-      data: { points }
+      data: { points },
     });
   } catch (error) {
     next(error);
@@ -16,7 +16,7 @@ const getCustomerPoints = async (req, res, next) => {
 const exchangePointsForVoucher = async (req, res, next) => {
   try {
     const { pointsToUse } = req.body;
-    
+
     if (!pointsToUse) {
       throw new AppError("Points amount is required", 400);
     }
@@ -28,7 +28,7 @@ const exchangePointsForVoucher = async (req, res, next) => {
 
     res.status(200).json({
       message: "Points exchanged for voucher successfully",
-      data: voucher
+      data: voucher,
     });
   } catch (error) {
     next(error);
@@ -40,12 +40,12 @@ const getCustomerVouchers = async (req, res, next) => {
     const vouchers = await PointVoucher.find({
       customer: req.user._id,
       status: "unused",
-      validTo: { $gte: new Date() }
+      validTo: { $gte: new Date() },
     });
 
     res.status(200).json({
       message: "Customer vouchers retrieved successfully",
-      data: vouchers
+      data: vouchers,
     });
   } catch (error) {
     next(error);
@@ -55,5 +55,5 @@ const getCustomerVouchers = async (req, res, next) => {
 module.exports = {
   getCustomerPoints,
   exchangePointsForVoucher,
-  getCustomerVouchers
-}; 
+  getCustomerVouchers,
+};

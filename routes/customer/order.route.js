@@ -1,11 +1,11 @@
 const router = require("express").Router();
-const { verifyToken } = require("../middleware/auth.middleware");
+const { verifyToken } = require("../../middleware/auth.middleware");
 const {
   createOrder,
   getOrdersByUser,
   cancelOrder,
   updateOrderPayment,
-} = require("../controllers/order.controller");
+} = require("../../controllers/customer/order.controller");
 
 router.post("/", verifyToken, createOrder),
   router.get("/", verifyToken, getOrdersByUser),
