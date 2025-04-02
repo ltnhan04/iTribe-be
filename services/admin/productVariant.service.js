@@ -38,7 +38,7 @@ class ProductVariantService {
 
     const savedProductVariant = await productVariant.save();
     if (!savedProductVariant) {
-      throw new AppError("Failed to create product variant", 404);
+      throw new AppError("Failed to create product variant", 500);
     }
 
     foundProduct.variants.push(savedProductVariant._id);
@@ -109,29 +109,48 @@ class ProductVariantService {
   };
 
   static handleDeleteProductVariant = async (variantId) => {
-    const productVariant = await ProductVariant.findById(variantId);
-    if (!productVariant) {
-      throw new AppError("Product variant not found", 404);
-    }
-
-    const productId = productVariant.productId;
-    const product = await Product.findById(productId);
-
-    await ProductVariant.findByIdAndDelete(variantId);
-    await Product.findByIdAndUpdate(productId, {
-      $pull: { variants: variantId },
-    });
-
-    if (product.image === productVariant.images[0]) {
-      const newVariant = await ProductVariant.findOne({ productId });
-      if (newVariant && newVariant.images.length > 0) {
-        product.image = newVariant.images[0];
-      } else {
-        product.image = null;
+    try {
+      // Find variant and product
+      const productVariant = await ProductVariant.findById(variantId);
+      if (!productVariant) {
+        throw new AppError("Product variant not found", 404);
       }
+
+      const product = await Product.findById(productVariant.product);
+      if (!product) {
+        throw new AppError("Product not found", 404);
+      }
+
+      // Delete variant's images from cloud storage
+      if (productVariant.images && productVariant.images.length > 0) {
+        await deleteImage(productVariant.images);
+      }
+
+      // Delete variant from database
+      await ProductVariant.findByIdAndDelete(variantId);
+
+      // Remove variant from product's variants array
+      product.variants = product.variants.filter(
+        (id) => id.toString() !== variantId
+      );
+
+      // Update product's main image if needed
+      if (product.image === productVariant.images[0]) {
+        const newVariant = await ProductVariant.findOne({
+          product: product._id,
+        });
+        if (newVariant && newVariant.images.length > 0) {
+          product.image = newVariant.images[0];
+        } else {
+          product.image = null;
+        }
+      }
+
       await product.save();
+      return { message: "Product variant deleted successfully!" };
+    } catch (error) {
+      throw error;
     }
-    return { message: "Product variant deleted successfully!" };
   };
 
   // static handleImportVariantFromExcel = async (productId, file) => {
