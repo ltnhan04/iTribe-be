@@ -4,8 +4,8 @@ const {
   updateReview,
   deleteReview,
   getReviews,
-} = require("../controllers/review.controller");
-const { verifyToken } = require("../middleware/auth.middleware");
+} = require("../../controllers/customer/review.controller");
+const { verifyToken } = require("../../middleware/auth.middleware");
 
 router.get("/", getReviews);
 router.post("/", verifyToken, createReview);

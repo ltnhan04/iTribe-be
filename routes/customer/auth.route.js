@@ -12,8 +12,8 @@ const {
   resentOTP,
   loginWithGoogle,
   googleCallback,
-} = require("../controllers/auth.controller");
-const { verifyToken } = require("../middleware/auth.middleware");
+} = require("../../controllers/customer/auth.controller");
+const { verifyToken } = require("../../middleware/auth.middleware");
 const router = express.Router();
 
 router.post("/signup", signUp);

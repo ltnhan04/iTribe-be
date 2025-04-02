@@ -1,4 +1,4 @@
-const ReviewService = require("../services/customer/review.service");
+const ReviewService = require("../../services/customer/review.service");
 
 const getReviews = async (_, res, next) => {
   try {

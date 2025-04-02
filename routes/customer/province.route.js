@@ -4,7 +4,7 @@ const {
   getProvinces,
   getDistricts,
   getWards,
-} = require("../controllers/province.controller");
+} = require("../../controllers/customer/province.controller");
 
 router.get("/provinces", getProvinces);
 router.get("/districts/:code", getDistricts);

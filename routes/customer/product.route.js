@@ -7,7 +7,7 @@ const {
   getPaginatedProducts,
   searchProducts,
   getProductByPriceRange,
-} = require("../controllers/product.controller");
+} = require("../../controllers/customer/product.controller");
 
 router.get("/", getAllProductsUser);
 

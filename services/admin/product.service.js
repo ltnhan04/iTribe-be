@@ -4,17 +4,26 @@ const ProductVariant = require("../../models/productVariant.model");
 const AppError = require("../../helpers/appError.helper");
 
 class ProductService {
+  static handleGetProductByCategory = async (categoryId) => {
+    const products = await Product.find({ category: categoryId })
+      .populate("variants")
+      .exec();
+    if (!products.length) {
+      throw new AppError("No products found", 404);
+    }
+    return products;
+  };
   static handleGetProducts = async () => {
     const products = await Product.find({}).populate({
       path: "variants",
-      select: "color storage price stock_quantity images rating"
+      select: "color storage price stock_quantity images rating",
     });
 
     if (!products.length) {
       throw new AppError("No products found", 404);
     }
 
-    return products.map(product => {
+    return products.map((product) => {
       const firstVariant = product.variants[0];
       return {
         _id: product._id,
@@ -25,7 +34,7 @@ class ProductService {
         stock: firstVariant ? firstVariant.stock_quantity : 0,
         rating: firstVariant ? firstVariant.rating : 0,
         image: firstVariant?.images[0] || null,
-        variantCount: product.variants.length
+        variantCount: product.variants.length,
       };
     });
   };
@@ -37,19 +46,21 @@ class ProductService {
         path: "reviews",
         populate: {
           path: "user",
-          select: "name email"
-        }
-      }
+          select: "name email",
+        },
+      },
     });
 
     if (!product) {
       throw new AppError("Product not found", 404);
     }
 
-    // Tính toán rating trung bình cho mỗi variant
-    product.variants = product.variants.map(variant => {
+    product.variants = product.variants.map((variant) => {
       if (variant.reviews && variant.reviews.length > 0) {
-        const totalRating = variant.reviews.reduce((sum, review) => sum + review.rating, 0);
+        const totalRating = variant.reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
         variant.rating = (totalRating / variant.reviews.length).toFixed(1);
       }
       return variant;
@@ -62,7 +73,7 @@ class ProductService {
     const product = new Product({
       description,
       name,
-      category
+      category,
     });
 
     const savedProduct = await product.save();
@@ -79,7 +90,6 @@ class ProductService {
       throw new AppError("Product not found", 404);
     }
 
-    // Nếu có ảnh mới, xóa ảnh cũ
     if (updates.image && product.image) {
       await deleteImage(product.image);
     }
@@ -94,20 +104,13 @@ class ProductService {
 
   static handleDeleteProduct = async (id) => {
     const product = await Product.findById(id);
-
     if (!product) {
       throw new AppError("Product not found", 404);
     }
-
-    // Xóa tất cả variants của product
     await ProductVariant.deleteMany({ product: id });
-
-    // Xóa ảnh của product nếu có
     if (product.image) {
       await deleteImage(product.image);
     }
-
-    // Xóa product
     await Product.findByIdAndDelete(id);
     return { message: "Product and its variants deleted successfully" };
   };
