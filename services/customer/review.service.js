@@ -17,11 +17,9 @@ class ReviewService {
     productVariantId,
     rating,
     comment,
-    isAnonymous,
     userId
   ) => {
     const user = await User.findById(userId);
-
     if (!user) {
       throw new AppError("Customer not found", 404);
     }
@@ -31,18 +29,17 @@ class ReviewService {
     }
     const existingReview = await Review.findOne({
       user: userId,
-      productId: productVariantId,
+      variant: productVariantId,
     });
     if (existingReview) {
       throw new AppError("You have already reviewed this product", 400);
     }
 
     const review = new Review({
-      productId: productVariantId,
+      variant: productVariantId,
       user: userId,
       rating,
       comment,
-      isAnonymous,
     });
     const savedReview = await review.save();
     if (!savedReview) {
@@ -86,10 +83,9 @@ class ReviewService {
     }
 
     await ProductVariant.updateOne(
-      { _id: review.productId },
+      { _id: review.variant },
       { $pull: { reviews: id } }
     );
-
     const deletedReview = await Review.findByIdAndDelete(id);
     return deletedReview;
   };

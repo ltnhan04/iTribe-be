@@ -6,6 +6,13 @@ const ProductVariant = require("../../models/productVariant.model");
 const AppError = require("../../helpers/appError.helper");
 
 class ProductVariantService {
+  static handleDetailsVariant = async (variantId) => {
+    const variant = await ProductVariant.findById(variantId);
+    if (!variant) {
+      throw new AppError("Variant not found", 404);
+    }
+    return variant;
+  };
   static handleCreateProductVariant = async (
     product,
     colorName,
@@ -110,31 +117,21 @@ class ProductVariantService {
 
   static handleDeleteProductVariant = async (variantId) => {
     try {
-      // Find variant and product
       const productVariant = await ProductVariant.findById(variantId);
       if (!productVariant) {
         throw new AppError("Product variant not found", 404);
       }
-
       const product = await Product.findById(productVariant.product);
       if (!product) {
         throw new AppError("Product not found", 404);
       }
-
-      // Delete variant's images from cloud storage
       if (productVariant.images && productVariant.images.length > 0) {
         await deleteImage(productVariant.images);
       }
-
-      // Delete variant from database
       await ProductVariant.findByIdAndDelete(variantId);
-
-      // Remove variant from product's variants array
       product.variants = product.variants.filter(
         (id) => id.toString() !== variantId
       );
-
-      // Update product's main image if needed
       if (product.image === productVariant.images[0]) {
         const newVariant = await ProductVariant.findOne({
           product: product._id,
