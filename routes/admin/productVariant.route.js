@@ -10,8 +10,10 @@ const {
   updateProductVariant,
   deleteProductVariant,
   // importVariantFromExcel,
+  detailsVariant,
 } = require("../../controllers/admin/productVariant.controller");
 
+router.get("/:variantId", verifyAdmin, detailsVariant);
 router.post("/", verifyAdmin, upload.array("images", 5), createProductVariant);
 router.put(
   "/:variantId",

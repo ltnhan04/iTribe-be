@@ -38,6 +38,11 @@ const productVariantSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    status: {
+      type: String,
+      enum: ["in_stock", "out_of_stock"],
+      default: "in_stock",
+    },
     images: {
       type: [String],
       required: true,

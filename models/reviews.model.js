@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const reviewSchema = new mongoose.Schema(
   {
-    product_variants: {
+    variant: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProductVariant",
       required: true,

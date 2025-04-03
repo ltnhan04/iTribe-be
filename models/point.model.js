@@ -19,6 +19,7 @@ const pointSchema = new mongoose.Schema(
     expiryDate: {
       type: Date,
       required: true,
+      index: { expires: 0 },
     },
     isExpired: {
       type: Boolean,
@@ -28,4 +29,4 @@ const pointSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Point", pointSchema); 
+module.exports = mongoose.model("Point", pointSchema);

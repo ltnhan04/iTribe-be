@@ -75,32 +75,33 @@ class PromotionService {
     }
     return promotions;
   };
-  //Tạo voucher free ship cho user đầu tiên
   async createFirstOrderFreeShipPromotion(userId) {
     try {
-      // Kiểm tra xem user đã có đơn hàng nào chưa
       const existingOrders = await Order.find({ user: userId });
       if (existingOrders.length > 0) {
-        return null; // User đã có đơn hàng, không tạo voucher
+        return null;
       }
 
-      // Tạo mã voucher ngẫu nhiên
-      const code = `FREESHIP_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      
-      // Tạo voucher mới
+      const code = `FREESHIP_${Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase()}`;
+
       const promotion = new Promotion({
         code,
         discount_type: "amount",
         valid_from: new Date(),
-        valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Hạn 30 ngày
+        valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         is_active: true,
         max_usage: 1,
         max_usage_per_user: 1,
         min_order_amount: 0,
-        user_usage: [{
-          user: userId,
-          usageCount: 0
-        }]
+        user_usage: [
+          {
+            user: userId,
+            usageCount: 0,
+          },
+        ],
       });
 
       await promotion.save();

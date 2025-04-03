@@ -53,18 +53,6 @@ const promotionSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    applicable_category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      default: null,
-    },
-    applicable_products: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "ProductVariant",
-        default: [],
-      },
-    ],
   },
   { timestamps: true }
 );

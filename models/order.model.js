@@ -7,14 +7,13 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    productVariants: [
+    variants: [
       {
-        productVariant: {
+        variant: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "ProductVariant",
         },
         quantity: { type: Number, required: true },
-        price: { type: Number, required: true },
       },
     ],
     totalAmount: {
@@ -32,7 +31,8 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      default: "stripe",
+      enum: ["stripe", "momo", "ship-cod"],
+      default: "ship-cod",
       required: true,
     },
     stripeSessionId: {

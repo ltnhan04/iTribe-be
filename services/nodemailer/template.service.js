@@ -93,7 +93,6 @@ const PASSWORD_RESET_REQUEST_TEMPLATE = `
 </body>
 </html>
 `;
-//Xác nhận đơn hàng
 const ORDER_CONFIRMATION_TEMPLATE = `
 <!DOCTYPE html>
 <html lang="en">

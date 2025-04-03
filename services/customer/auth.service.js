@@ -113,9 +113,7 @@ class AuthService {
     if (customer && (await customer.comparePassword(password))) {
       const { accessToken, refreshToken } = generateToken(customer._id);
       setCookie(res, "refreshToken", refreshToken);
-
       await storeRefreshToken(customer._id, refreshToken);
-
       return { accessToken, name: customer.name, message: "Login success" };
     } else {
       let wrongPassword = await RedisHelper.get(`wrongPassword:${email}`);
