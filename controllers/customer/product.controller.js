@@ -1,5 +1,19 @@
 const ProductService = require("../../services/customer/product.service");
 
+const getProductsByCategory = async (req, res, next) => {
+  try {
+    const { categoryId } = req.query;
+    const variants = await ProductService.handleGetProductByCategory(
+      categoryId.replace(/"/g, "")
+    );
+    res.status(200).json({
+      message: "Get products by category successfully",
+      data: variants,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 const getAllProductsUser = async (_, res, next) => {
   try {
     const data = await ProductService.handleGetProducts();
@@ -34,7 +48,6 @@ const getProductByName = async (req, res, next) => {
 
 const searchProducts = async (req, res, next) => {
   const { query } = req.query;
-  console.log(query);
   try {
     const products = await ProductService.handleSearchProducts(query);
     res.status(200).json({ products });
@@ -75,4 +88,5 @@ module.exports = {
   searchProducts,
   getProductByPriceRange,
   getPaginatedProducts,
+  getProductsByCategory,
 };

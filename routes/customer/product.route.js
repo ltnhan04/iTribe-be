@@ -7,14 +7,14 @@ const {
   getPaginatedProducts,
   searchProducts,
   getProductByPriceRange,
+  getProductsByCategory,
 } = require("../../controllers/customer/product.controller");
-
-router.get("/", getAllProductsUser);
 
 router.get("/search", searchProducts);
 router.get("/range", getProductByPriceRange);
 router.get("/paginate", getPaginatedProducts);
-
+router.get("/filter", getProductsByCategory);
+router.get("/", getAllProductsUser);
 router.get("/:id", getProductById);
 router.get("/product/:id", getProductById);
 router.get("/name/:name", getProductByName);

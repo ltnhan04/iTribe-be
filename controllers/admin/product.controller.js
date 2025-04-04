@@ -4,7 +4,7 @@ const getProductsByCategory = async (req, res, next) => {
   try {
     const { categoryId } = req.query;
     const products = await ProductService.handleGetProductByCategory(
-      categoryId
+      categoryId.replace(/"/g, "")
     );
     res.status(200).json({
       message: "Get Products Successfully",

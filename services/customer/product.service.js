@@ -3,6 +3,15 @@ const ProductVariant = require("../../models/productVariant.model");
 const AppError = require("../../helpers/appError.helper");
 
 class ProductService {
+  static handleGetProductByCategory = async (categoryId) => {
+    const products = await Product.find({ category: categoryId })
+      .populate("variants")
+      .exec();
+    if (!products.length) {
+      throw new AppError("No products found", 404);
+    }
+    return products;
+  };
   static handleGetProducts = async () => {
     const products = await Product.find({}).populate({
       path: "variants",

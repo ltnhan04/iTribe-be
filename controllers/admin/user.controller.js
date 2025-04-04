@@ -17,7 +17,9 @@ const getPaginatedUser = async (req, res, next) => {
 const getAllUser = async (_, res, next) => {
   try {
     const customers = await CustomerService.handleGetCustomers();
-    res.status(200).json({ customers });
+    res
+      .status(200)
+      .json({ message: "Get customers successfully", data: customers });
   } catch (error) {
     next(error);
   }
@@ -33,64 +35,10 @@ const getUserDetail = async (req, res, next) => {
   }
 };
 
-const getUserOrder = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
 
-    const orders = await CustomerService.handleGetCustomerOrder(userId);
-
-    res.status(200).json({ orderHistory: orders });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getUserOrderDetail = async (req, res, next) => {
-  try {
-    const { productVariantId } = req.params;
-    const productVariant = await CustomerService.handleGetOrderDetails(
-      productVariantId
-    );
-
-    res.status(200).json({ productVariant });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const banUser = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-
-    const customer = await CustomerService.handleBanCustomer(userId);
-
-    res
-      .status(200)
-      .json({ message: "Customer has been banned successfully", customer });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const unBanUser = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const customer = await CustomerService.handleUnbanCustomer(userId);
-
-    res
-      .status(200)
-      .json({ message: "Customer has been unbanned successfully", customer });
-  } catch (error) {
-    next(error);
-  }
-};
 
 module.exports = {
   getPaginatedUser,
   getAllUser,
-  getUserOrder,
-  getUserOrderDetail,
   getUserDetail,
-  banUser,
-  unBanUser,
 };
