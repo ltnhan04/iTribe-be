@@ -10,20 +10,19 @@ const getReviews = async (_, res, next) => {
 };
 const createReview = async (req, res, next) => {
   try {
-    const { productVariantId, rating, comment, isAnonymous } = req.body;
+    const { variant, rating, comment } = req.body;
     const userId = req.user._id;
 
     const savedReview = await ReviewService.handleCreateReview(
-      productVariantId,
+      variant,
       rating,
       comment,
-      isAnonymous,
       userId
     );
 
     res
       .status(201)
-      .json({ message: "Review created successfully", review: savedReview });
+      .json({ message: "Review created successfully", data: savedReview });
   } catch (error) {
     next(error);
   }
@@ -32,19 +31,18 @@ const createReview = async (req, res, next) => {
 const updateReview = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { rating, comment, isAnonymous } = req.body;
+    const { rating, comment } = req.body;
 
     const updatedReview = await ReviewService.handleUpdateReview(
       id,
       req.user._id,
       rating,
-      comment,
-      isAnonymous
+      comment
     );
 
     res
       .status(200)
-      .json({ message: "Review updated successfully", review: updatedReview });
+      .json({ message: "Review updated successfully", data: updatedReview });
   } catch (error) {
     next(error);
   }
@@ -61,7 +59,7 @@ const deleteReview = async (req, res, next) => {
 
     res
       .status(200)
-      .json({ message: "Review deleted successfully", review: deletedReview });
+      .json({ message: "Review deleted successfully", data: deletedReview });
   } catch (error) {
     next(error);
   }

@@ -14,10 +14,15 @@ class ProductService {
     return products;
   };
   static handleGetProducts = async () => {
-    const products = await Product.find({}).populate({
-      path: "variants",
-      select: "color storage price stock_quantity images rating",
-    });
+    const products = await Product.find({})
+      .populate({
+        path: "variants",
+        select: "color storage price stock_quantity images rating",
+      })
+      .populate({
+        path: "category",
+        select: "name",
+      });
 
     if (!products.length) {
       throw new AppError("No products found", 404);
@@ -29,27 +34,37 @@ class ProductService {
         _id: product._id,
         name: product.name,
         description: product.description,
-        category: product.category,
+        category: product.category
+          ? {
+              _id: product.category._id,
+              name: product.category.name,
+              description: product.category.description,
+            }
+          : null,
         price: firstVariant ? firstVariant.price : 0,
         stock: firstVariant ? firstVariant.stock_quantity : 0,
         rating: firstVariant ? firstVariant.rating : 0,
         image: firstVariant?.images[0] || null,
-        variantCount: product.variants.length,
       };
     });
   };
 
   static handleGetProductDetails = async (id) => {
-    const product = await Product.findById(id).populate({
-      path: "variants",
-      populate: {
-        path: "reviews",
+    const product = await Product.findById(id)
+      .populate({
+        path: "variants",
         populate: {
-          path: "user",
-          select: "name email",
+          path: "reviews",
+          populate: {
+            path: "user",
+            select: "name email",
+          },
         },
-      },
-    });
+      })
+      .populate({
+        path: "category",
+        select: "name",
+      });
 
     if (!product) {
       throw new AppError("Product not found", 404);

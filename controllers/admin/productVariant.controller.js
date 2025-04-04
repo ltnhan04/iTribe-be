@@ -1,6 +1,17 @@
-const fs = require("fs");
 const ProductVariantService = require("../../services/admin/productVariant.service");
 
+const detailsVariant = async (req, res, next) => {
+  try {
+    const variantId = req.params.variantId;
+    const variant = await ProductVariantService.handleDetailsVariant(variantId);
+    res.status(200).json({
+      message: "Get variant successfully!",
+      data: variant,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 const createProductVariant = async (req, res, next) => {
   try {
     const {
@@ -115,5 +126,6 @@ module.exports = {
   createProductVariant,
   updateProductVariant,
   deleteProductVariant,
+  detailsVariant,
   // importVariantFromExcel,
 };

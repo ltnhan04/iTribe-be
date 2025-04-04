@@ -79,38 +79,62 @@ const sendResetSuccessEmail = async (email) => {
     console.log(`Error sending password reset success email`, error);
   }
 };
-//Gửi email xác nhận đơn hàng
 const sendOrderConfirmationEmail = async (order, customer) => {
   try {
-    // Tạo bảng sản phẩm HTML
     const orderItemsHtml = `
-      <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;">
         <thead>
-          <tr style="background-color: #f2f2f2;">
-            <th style="padding: 10px; text-align: left;">Sản phẩm</th>
-            <th style="padding: 10px; text-align: right;">Số lượng</th>
-            <th style="padding: 10px; text-align: right;">Giá</th>
+          <tr style="background-color: #f2f2f2; text-align: left;">
+            <th style="padding: 10px; border: 1px solid #ddd;">Sản phẩm</th>
+            <th style="padding: 10px; border: 1px solid #ddd;">Hình ảnh</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Số lượng</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Giá</th>
           </tr>
         </thead>
         <tbody>
-          ${order.productVariants.map(item => `
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.productVariant.name}</td>
-              <td style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">${item.quantity}</td>
-              <td style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">${item.productVariant.price.toLocaleString('vi-VN')} VND</td>
-            </tr>
-          `).join('')}
+          ${order.variants
+            .map((item) => {
+              if (!item.variant) return "";
+              return `
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                  ${
+                    item.variant.product?.name || "Sản phẩm không xác định"
+                  } <br>
+                  <small style="color: #777;">(${item.variant.storage}, ${
+                item.variant.color?.colorName
+              })</small>
+                </td>
+                <td style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">
+                  <img src="${
+                    item.variant.images?.[0]
+                  }" alt="Sản phẩm" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                </td>
+                <td style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">${
+                  item.quantity
+                }</td>
+                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">
+                  ${item.variant.price.toLocaleString("vi-VN")} VND
+                </td>
+              </tr>
+            `;
+            })
+            .join("")}
         </tbody>
       </table>
     `;
 
-    // Thay thế các placeholder trong template
-    const htmlContent = ORDER_CONFIRMATION_TEMPLATE
-      .replace("{customerName}", customer.name)
+    const htmlContent = ORDER_CONFIRMATION_TEMPLATE.replace(
+      "{customerName}",
+      customer.name
+    )
       .replace("{orderId}", order._id)
-      .replace("{orderDate}", new Date(order.createdAt).toLocaleDateString('vi-VN'))
-      .replace("{deliveryDate}", new Date().toLocaleDateString('vi-VN'))
-      .replace("{totalAmount}", order.totalAmount.toLocaleString('vi-VN'))
+      .replace(
+        "{orderDate}",
+        new Date(order.createdAt).toLocaleDateString("vi-VN")
+      )
+      .replace("{deliveryDate}", new Date().toLocaleDateString("vi-VN"))
+      .replace("{totalAmount}", order.totalAmount.toLocaleString("vi-VN"))
       .replace("{orderItems}", orderItemsHtml)
       .replace("{shippingAddress}", order.shippingAddress);
 
@@ -127,7 +151,7 @@ const sendOrderConfirmationEmail = async (order, customer) => {
     const info = await transporter.sendMail({
       from: '"iTribe.huflit" <iTribe.huflit@gmail.com>',
       to: customer.email,
-      subject: "Đơn hàng đã giao thành công!",
+      subject: "Đơn hàng của bạn đã được xác nhận!",
       html: htmlContent,
     });
 

@@ -2,11 +2,10 @@ const OrderService = require("../../services/customer/order.service");
 
 const createOrder = async (req, res, next) => {
   try {
-    const { productVariants, totalAmount, shippingAddress, paymentMethod } =
-      req.body;
+    const { variants, totalAmount, shippingAddress, paymentMethod } = req.body;
     const savedOrder = await OrderService.handleCreateOrder({
       user: req.user._id,
-      productVariants,
+      variants,
       totalAmount,
       shippingAddress,
       paymentMethod,
@@ -23,7 +22,7 @@ const createOrder = async (req, res, next) => {
 const getOrdersByUser = async (req, res, next) => {
   try {
     const orders = await OrderService.handleGetOrderUser(req.user._id);
-    res.status(200).json({ orders });
+    res.status(200).json({ message: "Get orders successfully", orders });
   } catch (error) {
     next(error);
   }
@@ -44,10 +43,8 @@ const cancelOrder = async (req, res, next) => {
 const updateOrderPayment = async (req, res, next) => {
   try {
     const { sessionId, orderId } = req.body;
-
     const { message, updatedOrder } =
       await OrderService.handleUpdateOrderPayment(sessionId, orderId);
-
     res.status(200).json({
       message,
       order: updatedOrder,
