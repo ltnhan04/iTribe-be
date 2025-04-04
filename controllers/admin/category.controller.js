@@ -8,6 +8,17 @@ const getAllCategories = async (req, res, next) => {
     next(error);
   }
 };
+const getSubcategories = async (req, res, next) => {
+  try {
+    const { parentCategoryId } = req.params;
+    const subcategories = await CategoryService.handleGetSubcategories(
+      parentCategoryId
+    );
+    res.status(200).json({ message: "success", data: subcategories });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const getCategoryById = async (req, res, next) => {
   try {
@@ -22,10 +33,13 @@ const getCategoryById = async (req, res, next) => {
 const createCategory = async (req, res, next) => {
   try {
     const { name, parent_category } = req.body;
-    const category = await CategoryService.handleCreateCategory(name, parent_category);
+    const category = await CategoryService.handleCreateCategory(
+      name,
+      parent_category
+    );
     res.status(201).json({
       message: "Category created successfully",
-      category
+      category,
     });
   } catch (error) {
     next(error);
@@ -39,7 +53,7 @@ const updateCategory = async (req, res, next) => {
     const category = await CategoryService.handleUpdateCategory(id, updates);
     res.status(200).json({
       message: "Category updated successfully",
-      category
+      category,
     });
   } catch (error) {
     next(error);
@@ -61,5 +75,6 @@ module.exports = {
   getCategoryById,
   createCategory,
   updateCategory,
-  deleteCategory
-}; 
+  deleteCategory,
+  getSubcategories,
+};

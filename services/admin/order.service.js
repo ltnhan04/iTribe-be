@@ -12,13 +12,10 @@ class OrderService {
         match: { _id: { $ne: null } },
       })
       .populate("variants.variant", "name color storage images");
-    const filteredOrders = orders.filter(
-      (order) => order.user && order.variants.every((item) => item.variant)
-    );
-    if (filteredOrders.length === 0) {
-      throw new AppError("No order found", 404);
+    if (!orders) {
+      throw new AppError("No orders found", 404);
     }
-    return filteredOrders;
+    return orders;
   };
 
   static handleGetOrderDetail = async (orderId) => {
