@@ -4,11 +4,16 @@ const AppError = require("../../helpers/appError.helper");
 class PromotionService {
   static handleCreatePromotion = async (
     code,
-    discountPercentage,
-    validFrom,
-    validTo,
-    maxUsage,
-    minOrderAmount
+    discount_type,
+    discount_amount,
+    discount_percent,
+    valid_from,
+    valid_to,
+    max_usage,
+    max_usage_per_user,
+    min_order_amount,
+    applicable_category,
+    applicable_products
   ) => {
     const existingPromotion = await Promotion.findOne({ code });
     if (existingPromotion) {
@@ -17,11 +22,17 @@ class PromotionService {
 
     const newPromotion = new Promotion({
       code,
-      discountPercentage,
-      validFrom,
-      validTo,
-      maxUsage,
-      minOrderAmount,
+      discount_type,
+      discount_amount,
+      discount_percent,
+      valid_from,
+      valid_to,
+      max_usage,
+      max_usage_per_user,
+      min_order_amount,
+      applicable_category,
+      applicable_products,
+      is_active: true
     });
 
     const savedPromotion = await newPromotion.save();
@@ -40,7 +51,9 @@ class PromotionService {
   };
 
   static handleGetPromotions = async () => {
-    const promotions = await Promotion.find({});
+    const promotions = await Promotion.find({})
+      .populate('applicable_category', 'name')
+      .populate('applicable_products', 'name variant_name price');
     return promotions;
   };
 

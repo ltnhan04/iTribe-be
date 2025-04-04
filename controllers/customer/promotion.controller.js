@@ -2,26 +2,39 @@ const PromotionService = require("../../services/customer/promotion.service");
 
 const applyPromotion = async (req, res, next) => {
   try {
-    const { code, totalAmount, userId } = req.body;
-    const discountedAmount = await PromotionService.handleApplyPromotion(
+    const { code, totalAmount } = req.body;
+    const userId = req.user._id; // Lấy userId từ req.user sau khi verify token
+
+    const result = await PromotionService.handleApplyPromotion(
       code,
       totalAmount,
       userId
     );
 
     res.status(200).json({
-      message: "Promotion applied successfully",
-      discountedAmount: discountedAmount,
+      status: "success",
+      data: {
+        originalAmount: result.originalAmount,
+        discountAmount: result.discountAmount,
+        finalAmount: result.finalAmount
+      },
     });
   } catch (error) {
     next(error);
   }
 };
 
-const getActivePromotions = async (_, res, next) => {
+const getActivePromotions = async (req, res, next) => {
   try {
-    const promotions = await PromotionService.handleGetActivePromotions();
-    res.status(200).json({ promotions });
+    const userId = req.user._id; // Lấy userId từ req.user sau khi verify token
+    const promotions = await PromotionService.handleGetActivePromotions(userId);
+    
+    res.status(200).json({
+      status: "success",
+      data: {
+        promotions: promotions
+      }
+    });
   } catch (error) {
     next(error);
   }

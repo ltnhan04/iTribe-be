@@ -18,6 +18,7 @@ const provinceRoutes = require("./routes/customer/province.route");
 const shippingRoutes = require("./routes/customer/shipping.route");
 const pointRoutes = require("./routes/customer/point.route");
 const recommendationRoutes = require("./routes/customer/recommendation.route");
+const chatbotRoute = require("./routes/customer/chatbot.route");
 require("./libs/passport");
 // Admin routes
 const productRoutesAdmin = require("./routes/admin/product.route");
@@ -82,6 +83,7 @@ app.use("/api/v1/points", pointRoutes);
 app.use("/api/v1/recommendations", recommendationRoutes);
 // app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1", provinceRoutes);
+app.use("/api/v1/chatbot", chatbotRoute);
 
 // Admin routes
 app.use("/api/v1/admin/products", productRoutesAdmin);
