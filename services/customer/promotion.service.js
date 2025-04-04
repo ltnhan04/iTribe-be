@@ -6,76 +6,126 @@ class PromotionService {
   static handleApplyPromotion = async (code, totalAmount, userId) => {
     const promotion = await Promotion.findOne({
       code,
+      is_active: true,
+      valid_from: { $lte: new Date() },
+      valid_to: { $gte: new Date() }
     });
+
     if (!promotion) {
       throw new AppError("Invalid promotion code", 404);
     }
 
-    const currentDate = new Date();
-
-    if (promotion.validFrom > currentDate) {
-      throw new AppError("Promotion is not valid", 400);
-    }
-
-    if (promotion.validTo < currentDate) {
-      throw new AppError("Promotion is expired");
-    }
-    if (!promotion.isActive) {
-      throw new AppError("Promotion is inactive");
-    }
-    if (totalAmount < promotion.minOrderAmount) {
+    if (totalAmount < promotion.min_order_amount) {
       throw new AppError(
-        `Order must be at least ${promotion.minOrderAmount} to use this promotion`,
+        `Order must be at least ${promotion.min_order_amount.toLocaleString()}đ to use this promotion`,
         400
       );
     }
-    const userUsage = promotion.userUsage.find(
-      (usage) => usage.userId === userId
-    );
-    if (userUsage && userUsage.usageCount >= promotion.maxUsagePerUser) {
-      throw new AppError(
-        `You can only use this promotion ${promotion.maxUsagePerUser} times`,
-        400
-      );
-    }
-    if (promotion.usedCount >= promotion.maxUsage) {
-      promotion.isActive = false;
+
+    // Kiểm tra số lần sử dụng của voucher
+    if (promotion.used_count >= promotion.max_usage) {
+      promotion.is_active = false;
       await promotion.save();
       throw new AppError("Promotion usage limit reached", 400);
     }
 
-    let discountedAmount = totalAmount;
-    if (promotion.discountPercentage) {
-      discountedAmount =
-        totalAmount - totalAmount * (promotion.discountPercentage / 100);
+    // Kiểm tra số lần sử dụng của user
+    const userUsage = promotion.user_usage.find(
+      (usage) => usage.user.toString() === userId
+    );
+    if (userUsage && userUsage.usageCount >= promotion.max_usage_per_user) {
+      throw new AppError(
+        `You can only use this promotion ${promotion.max_usage_per_user} times`,
+        400
+      );
     }
-    if (discountedAmount < 0) {
-      discountedAmount = 0;
+
+    // Tính số tiền giảm giá
+    let discountAmount = 0;
+    if (promotion.discount_type === "percentage") {
+      discountAmount = totalAmount * (promotion.discount_percent / 100);
+    } else {
+      discountAmount = promotion.discount_amount;
     }
-    promotion.usedCount += 1;
+
+    // Cập nhật số lần sử dụng
+    promotion.used_count += 1;
     if (userUsage) {
       userUsage.usageCount += 1;
     } else {
-      promotion.userUsage.push({ userId, usageCount: 1 });
+      promotion.user_usage.push({ user: userId, usageCount: 1 });
     }
-
     await promotion.save();
-    return discountedAmount;
+
+    return {
+      originalAmount: totalAmount,
+      discountAmount: discountAmount,
+      finalAmount: Math.max(0, totalAmount - discountAmount)
+    };
   };
 
-  static handleGetActivePromotions = async () => {
+  static handleGetActivePromotions = async (userId) => {
     const currentDate = new Date();
+    
+    // Tìm các voucher đang active và trong thời gian hiệu lực
     const promotions = await Promotion.find({
-      isActive: true,
-      validFrom: { $lte: currentDate },
-      validTo: { $gte: currentDate },
-    }).lean();
+      is_active: true,
+      valid_from: { $lte: currentDate },
+      valid_to: { $gte: currentDate }
+    }).select('code discount_type discount_amount discount_percent min_order_amount description user_usage max_usage max_usage_per_user used_count')
+      .lean();
+
     if (!promotions || promotions.length === 0) {
-      throw new AppError("No active promotions found", 404);
+      return []; // Trả về mảng rỗng thay vì throw error
     }
-    return promotions;
+
+    // Lọc và format vouchers
+    return promotions
+      .filter(promotion => {
+        // Kiểm tra số lần sử dụng tổng
+        if (!promotion.max_usage || !promotion.used_count) return true;
+        return promotion.used_count < promotion.max_usage;
+      })
+      .map(promotion => {
+        // Kiểm tra xem có phải voucher cá nhân không
+        const userUsage = promotion.user_usage?.find(
+          usage => usage.user && usage.user.toString() === userId
+        );
+
+        // Nếu là voucher cá nhân, kiểm tra số lần sử dụng
+        if (userUsage && promotion.max_usage_per_user) {
+          if (userUsage.usageCount >= promotion.max_usage_per_user) {
+            return null;
+          }
+        }
+
+        const discountAmount = promotion.discount_type === "amount" ? 
+          promotion.discount_amount || 0 : 
+          promotion.discount_percent || 0;
+
+        const description = promotion.description || 
+          `Giảm ${promotion.discount_type === "amount" ? 
+            (discountAmount || 0).toLocaleString() + "đ" : 
+            discountAmount + "%"}`;
+
+        return {
+          code: promotion.code || "",
+          discountType: promotion.discount_type || "amount",
+          discountValue: discountAmount,
+          minOrderAmount: promotion.min_order_amount || 0,
+          description: description,
+          isPersonal: !!userUsage,
+          usageCount: userUsage?.usageCount || 0,
+          maxUsagePerUser: promotion.max_usage_per_user || 1,
+          remainingUses: promotion.max_usage ? 
+            Math.max(0, promotion.max_usage - (promotion.used_count || 0)) : 
+            null
+        };
+      })
+      .filter(Boolean); // Loại bỏ các phần tử null
   };
-  async createFirstOrderFreeShipPromotion(userId) {
+
+  static async createFirstOrderFreeShipPromotion(userId) {
     try {
       const existingOrders = await Order.find({ user: userId });
       if (existingOrders.length > 0) {
@@ -90,18 +140,18 @@ class PromotionService {
       const promotion = new Promotion({
         code,
         discount_type: "amount",
+        discount_amount: 30000, // Giảm 30k tiền ship
         valid_from: new Date(),
         valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         is_active: true,
         max_usage: 1,
         max_usage_per_user: 1,
         min_order_amount: 0,
-        user_usage: [
-          {
-            user: userId,
-            usageCount: 0,
-          },
-        ],
+        description: "Miễn phí vận chuyển cho đơn hàng đầu tiên",
+        user_usage: [{
+          user: userId,
+          usageCount: 0
+        }]
       });
 
       await promotion.save();
@@ -113,4 +163,4 @@ class PromotionService {
   }
 }
 
-module.exports = new PromotionService();
+module.exports = PromotionService;

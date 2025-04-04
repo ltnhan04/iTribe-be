@@ -18,6 +18,8 @@ const provinceRoutes = require("./routes/customer/province.route");
 const shippingRoutes = require("./routes/customer/shipping.route");
 const pointRoutes = require("./routes/customer/point.route");
 const recommendationRoutes = require("./routes/customer/recommendation.route");
+const chatbotRoute = require("./routes/customer/chatbot.route");
+const revenueRoutes = require("./routes/admin/revenue.route");
 require("./libs/passport");
 // Admin routes
 const productRoutesAdmin = require("./routes/admin/product.route");
@@ -28,7 +30,7 @@ const reviewRoutesAdmin = require("./routes/admin/review.route");
 const notificationRouteAdmin = require("./routes/admin/notification.route");
 const productVariantRouteAdmin = require("./routes/admin/productVariant.route");
 const adminCategoryRoutes = require("./routes/admin/category.route");
-
+const revenueRoutesAdmin = require("./routes/admin/revenue.route");
 // // Chat routes
 // const chatRoutes = require("./routes/chat.route");
 
@@ -82,6 +84,7 @@ app.use("/api/v1/points", pointRoutes);
 app.use("/api/v1/recommendations", recommendationRoutes);
 // app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1", provinceRoutes);
+app.use("/api/v1/chatbot", chatbotRoute);
 
 // Admin routes
 app.use("/api/v1/admin/products", productRoutesAdmin);
@@ -92,6 +95,7 @@ app.use("/api/v1/admin/reviews", reviewRoutesAdmin);
 app.use("/api/v1/admin/promotions", promotionRoutesAdmin);
 app.use("/api/v1/admin/notifications", notificationRouteAdmin);
 app.use("/api/v1/admin/categories", adminCategoryRoutes);
+app.use("/api/v1/admin/revenue", revenueRoutesAdmin);
 
 app.get("/", (_, res) => {
   res.send("Hello World!");
