@@ -47,7 +47,7 @@ const updateOrderPayment = async (req, res, next) => {
       await OrderService.handleUpdateOrderPayment(sessionId, orderId);
     res.status(200).json({
       message,
-      order: updatedOrder,
+      data: updatedOrder,
     });
   } catch (error) {
     next(error);

@@ -85,24 +85,29 @@ class OrderService {
     if (!sessionId || !orderId) {
       throw new AppError("Missing sessionId or orderId", 400);
     }
+
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     if (!session || session.payment_status !== "paid") {
       throw new AppError("Payment not successful", 400);
     }
-    const order = await Order.findById(orderId);
+
+    const order = await Order.findById(orderId).populate("variants.variant");
     if (!order) {
       throw new AppError("Order not found", 404);
     }
+
     for (const item of order.variants) {
       const variant = item.variant;
-      if (variant) {
+      if (variant && typeof variant.save === "function") {
         variant.stock_quantity -= item.quantity;
         await variant.save();
       }
     }
+
     order.status = "processing";
     order.stripeSessionId = session.id;
     const updatedOrder = await order.save();
+
     return { message: "Order updated successfully", updatedOrder };
   };
 }

@@ -1,5 +1,14 @@
 const ProductService = require("../../services/customer/product.service");
 
+const getVariantBySlug = async (req, res, next) => {
+  try {
+    const { slug } = req.body;
+    const variants = await ProductService.handleGetVariantsBySlug(slug);
+    res.status(200).json({ message: "success", data: variants });
+  } catch (error) {
+    next(error);
+  }
+};
 const getProductsByCategory = async (req, res, next) => {
   try {
     const { categoryId } = req.query;
@@ -89,4 +98,5 @@ module.exports = {
   getProductByPriceRange,
   getPaginatedProducts,
   getProductsByCategory,
+  getVariantBySlug,
 };
