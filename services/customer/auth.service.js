@@ -171,14 +171,7 @@ class AuthService {
   };
 
   static handleGetProfile = async (id) => {
-    const customer = (await CustomerService.findCustomerById(id)).populate({
-      path: "orderHistory",
-      populate: {
-        path: "productVariants.productVariant",
-        select: "name color storage price",
-      },
-    });
-
+    const customer = await CustomerService.findCustomerById(id);
     if (!customer) {
       throw new AppError("Customer not found", 404);
     }
@@ -202,7 +195,6 @@ class AuthService {
     if (!storedData) {
       throw new AppError("Reset token expired", 400);
     }
-
     const parsedData = JSON.parse(storedData);
     const { userId } = parsedData;
 

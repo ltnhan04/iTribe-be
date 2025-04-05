@@ -2,27 +2,23 @@ const stripe = require("../../libs/stripe");
 const ProductVariant = require("../../models/productVariant.model");
 const AppError = require("../../helpers/appError.helper");
 const { vndLimit, priceInUSD } = require("../../constants");
-const crypto = require('crypto');
-const https = require('https');
+const crypto = require("crypto");
+const https = require("https");
 
 class PaymentService {
-  static handleCheckoutSession = async (productVariants, orderId) => {
-    if (
-      !productVariants ||
-      !Array.isArray(productVariants) ||
-      productVariants.length === 0
-    ) {
+  static handleCheckoutSession = async (variants, orderId) => {
+    if (!variants || !Array.isArray(variants) || variants.length === 0) {
       throw new AppError("Invalid product variants", 400);
     }
 
-    const variants = await Promise.all(
-      productVariants.map(async (item) => {
-        const product = await ProductVariant.findById(item.productVariant);
+    const productVariants = await Promise.all(
+      variants.map(async (item) => {
+        const product = await ProductVariant.findById(item.variant);
         if (!product) {
-          throw new Error(`ProductVariant ${item.productVariant} not found`);
+          throw new Error(`ProductVariant ${item.variant} not found`);
         }
         return {
-          name: product.name,
+          name: product.storage,
           price: product.price,
           quantity: item.quantity,
           image: product.images[0],
@@ -30,7 +26,7 @@ class PaymentService {
       })
     );
 
-    const lineItems = variants.map((variant) => {
+    const lineItems = productVariants.map((variant) => {
       const price = priceInUSD(variant.price);
       const unitAmountInCents = Math.round(price * 100);
 
@@ -70,22 +66,23 @@ class PaymentService {
       const accessKey = process.env.MOMO_ACCESS_KEY;
       const secretKey = process.env.MOMO_SECRET_KEY;
       const partnerCode = process.env.MOMO_PARTNER_CODE;
-      const redirectUrl = 'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b';
-      const ipnUrl = 'https://d159-42-113-219-30.ngrok-free.app/api/v1/payment/momo/callback';
+      const redirectUrl = `${process.env.CLIENT_URL}/payment/success`;
+      const ipnUrl = `${process.env.SERVER_URL}/api/v1/payment/momo/callback`;
       const requestType = "payWithMethod";
       const requestId = orderId;
-      const extraData = '';
-      const orderGroupId = '';
+      const extraData = "";
+      const orderGroupId = "";
       const autoCapture = true;
-      const lang = 'vi';
+      const lang = "vi";
 
       // Create raw signature
       const rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
 
       // Create signature
-      const signature = crypto.createHmac('sha256', secretKey)
+      const signature = crypto
+        .createHmac("sha256", secretKey)
         .update(rawSignature)
-        .digest('hex');
+        .digest("hex");
 
       // Create request body
       const requestBody = JSON.stringify({
@@ -103,32 +100,32 @@ class PaymentService {
         autoCapture,
         extraData,
         orderGroupId,
-        signature
+        signature,
       });
 
       // Create payment URL
       return new Promise((resolve, reject) => {
         const options = {
-          hostname: 'test-payment.momo.vn',
+          hostname: "test-payment.momo.vn",
           port: 443,
-          path: '/v2/gateway/api/create',
-          method: 'POST',
+          path: "/v2/gateway/api/create",
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(requestBody)
-          }
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(requestBody),
+          },
         };
 
-        const req = https.request(options, res => {
-          let body = '';
-          res.setEncoding('utf8');
-          res.on('data', (chunk) => {
+        const req = https.request(options, (res) => {
+          let body = "";
+          res.setEncoding("utf8");
+          res.on("data", (chunk) => {
             body += chunk;
           });
-          res.on('end', () => {
+          res.on("end", () => {
             try {
               const response = JSON.parse(body);
-              console.log('Create payment response:', response);
+              console.log("Create payment response:", response);
               if (response.resultCode === 0) {
                 resolve({
                   url: response.payUrl,
@@ -140,42 +137,48 @@ class PaymentService {
                   responseTime: response.responseTime,
                 });
               } else {
-                reject(new AppError(response.message || 'Payment creation failed', 400));
+                reject(
+                  new AppError(
+                    response.message || "Payment creation failed",
+                    400
+                  )
+                );
               }
             } catch (error) {
-              reject(new AppError('Error parsing response', 500));
+              reject(new AppError("Error parsing response", 500));
             }
           });
         });
 
-        req.on('error', (error) => {
-          reject(new AppError('Error creating payment request', 500));
+        req.on("error", (error) => {
+          reject(new AppError("Error creating payment request", 500));
         });
 
         req.write(requestBody);
         req.end();
       });
     } catch (error) {
-      throw new AppError('Error creating MoMo payment', 500);
+      throw new AppError("Error creating MoMo payment", 500);
     }
   };
 
   static handleMomoCallback = async (data) => {
-    console.log("Call back:::")
+    console.log("Call back:::");
     try {
       // Verify signature
       const accessKey = process.env.MOMO_ACCESS_KEY;
       const secretKey = process.env.MOMO_SECRET_KEY;
       const partnerCode = process.env.MOMO_PARTNER_CODE;
-      
+
       const rawSignature = `accessKey=${accessKey}&amount=${data.amount}&extraData=${data.extraData}&message=${data.message}&orderId=${data.orderId}&orderInfo=${data.orderInfo}&orderType=${data.orderType}&partnerCode=${partnerCode}&payType=${data.payType}&requestId=${data.requestId}&responseTime=${data.responseTime}&resultCode=${data.resultCode}&transId=${data.transId}`;
-      
-      const signature = crypto.createHmac('sha256', secretKey)
+
+      const signature = crypto
+        .createHmac("sha256", secretKey)
         .update(rawSignature)
-        .digest('hex');
+        .digest("hex");
 
       if (signature !== data.signature) {
-        throw new AppError('Invalid signature', 400);
+        throw new AppError("Invalid signature", 400);
       }
       console.log(data);
       // Handle payment result
@@ -185,18 +188,18 @@ class PaymentService {
           success: true,
           orderId: data.orderId,
           transId: data.transId,
-          message: data.message
+          message: data.message,
         };
       } else {
         // Payment failed
         return {
           success: false,
           orderId: data.orderId,
-          message: data.message
+          message: data.message,
         };
       }
     } catch (error) {
-      throw new AppError('Error handling MoMo callback', 500);
+      throw new AppError("Error handling MoMo callback", 500);
     }
   };
 
@@ -207,58 +210,59 @@ class PaymentService {
       const partnerCode = process.env.MOMO_PARTNER_CODE;
 
       const rawSignature = `accessKey=${accessKey}&orderId=${orderId}&partnerCode=${partnerCode}&requestId=${orderId}`;
-      const signature = crypto.createHmac('sha256', secretKey)
+      const signature = crypto
+        .createHmac("sha256", secretKey)
         .update(rawSignature)
-        .digest('hex');
+        .digest("hex");
 
       const requestBody = JSON.stringify({
         partnerCode,
         orderId,
         requestId: orderId,
         signature,
-        lang: 'vi'
+        lang: "vi",
       });
 
       return new Promise((resolve, reject) => {
         const options = {
-          hostname: 'test-payment.momo.vn',
+          hostname: "test-payment.momo.vn",
           port: 443,
-          path: '/v2/gateway/api/query',
-          method: 'POST',
+          path: "/v2/gateway/api/query",
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(requestBody)
-          }
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(requestBody),
+          },
         };
 
-        const req = https.request(options, res => {
-          let body = '';
-          res.setEncoding('utf8');
-          res.on('data', (chunk) => {
+        const req = https.request(options, (res) => {
+          let body = "";
+          res.setEncoding("utf8");
+          res.on("data", (chunk) => {
             body += chunk;
           });
-          res.on('end', () => {
+          res.on("end", () => {
             try {
               const response = JSON.parse(body);
-              console.log('Transaction status response:', response);
+              console.log("Transaction status response:", response);
               resolve(response);
             } catch (error) {
-              reject(new AppError('Error parsing response', 500));
+              reject(new AppError("Error parsing response", 500));
             }
           });
         });
-        
-        req.on('error', (error) => {
-          reject(new AppError('Error querying transaction status', 500));
+
+        req.on("error", (error) => {
+          reject(new AppError("Error querying transaction status", 500));
         });
 
         req.write(requestBody);
         req.end();
       });
     } catch (error) {
-      throw new AppError('Error in transaction status check', 500);
+      throw new AppError("Error in transaction status check", 500);
     }
-  }
+  };
 }
 
 module.exports = PaymentService;

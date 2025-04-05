@@ -23,7 +23,22 @@ const userSchema = new mongoose.Schema(
       sparse: true,
     },
     address: {
-      type: String,
+      street: {
+        type: String,
+      },
+      ward: {
+        type: String,
+      },
+      district: {
+        type: String,
+      },
+      city: {
+        type: String,
+      },
+      country: {
+        type: String,
+        default: "Vietnam",
+      },
     },
     role: {
       type: String,

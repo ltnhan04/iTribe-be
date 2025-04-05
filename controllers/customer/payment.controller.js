@@ -2,10 +2,10 @@ const PaymentService = require("../../services/customer/payment.service");
 
 const createCheckoutSession = async (req, res, next) => {
   try {
-    const { productVariants, orderId } = req.body;
+    const { variants, orderId } = req.body;
 
     const session = await PaymentService.handleCheckoutSession(
-      productVariants,
+      variants,
       orderId
     );
     res.status(200).json({ url: session.url });
@@ -17,13 +17,13 @@ const createCheckoutSession = async (req, res, next) => {
 const createMomoPayment = async (req, res, next) => {
   try {
     const { orderId, amount, orderInfo } = req.body;
-    
+
     const paymentUrl = await PaymentService.createMomoPayment(
       orderId,
       amount,
       orderInfo
     );
-    
+
     res.status(200).json({ url: paymentUrl });
   } catch (error) {
     next(error);
@@ -45,13 +45,13 @@ const transactionStatus = async (req, res, next) => {
     const result = await PaymentService.transactionStatus(orderId);
     res.status(200).json(result);
   } catch (error) {
-    next(error);  
+    next(error);
   }
 };
 
-module.exports = { 
+module.exports = {
   createCheckoutSession,
   createMomoPayment,
   handleMomoCallback,
-  transactionStatus
+  transactionStatus,
 };

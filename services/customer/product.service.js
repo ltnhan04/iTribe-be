@@ -182,6 +182,50 @@ class ProductService {
       };
     });
   };
+  static handleGetVariantsBySlug = async (slug) => {
+    const variants = await ProductVariant.find({ slug })
+      .populate({
+        path: "product",
+        select: "name description category",
+      })
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "user",
+          select: "name email",
+        },
+      });
+
+    if (!variants || variants.length === 0) {
+      throw new AppError("No variants found", 404);
+    }
+
+    return variants.map((variant) => {
+      let rating = 0;
+      if (variant.reviews && variant.reviews.length > 0) {
+        const totalRating = variant.reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
+        rating = (totalRating / variant.reviews.length).toFixed(1);
+      }
+
+      return {
+        _id: variant._id,
+        productId: variant.product._id,
+        name: variant.product.name,
+        description: variant.product.description,
+        category: variant.product.category,
+        color: variant.color,
+        storage: variant.storage,
+        price: variant.price,
+        stock: variant.stock_quantity,
+        images: variant.images,
+        rating,
+        slug: variant.slug,
+      };
+    });
+  };
 }
 
 module.exports = ProductService;

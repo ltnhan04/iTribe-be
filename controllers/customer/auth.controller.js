@@ -32,12 +32,19 @@ const loginWithGoogle = async (req, res, next) => {
 const googleCallback = async (req, res, next) => {
   passport.authenticate("google", { session: false }, async (err, user) => {
     if (err || !user) {
-      return res.redirect("http://localhost:5173/login");
+      return res.redirect(`${process.env.CLIENT_URL}/login`);
     }
+    const userInfo = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    };
     const { accessToken, refreshToken } = generateToken(user._id);
     setCookie(res, "refreshToken", refreshToken);
     await storeRefreshToken(user._id, refreshToken);
-    return res.redirect(`http://localhost:5173/home`);
+    return res.redirect(
+      `${process.env.CLIENT_URL}/?accessToken=${accessToken}&name=${userInfo.name}&email=${userInfo.email}`
+    );
   })(req, res, next);
 };
 
@@ -52,7 +59,6 @@ const verifySignUp = async (req, res, next) => {
       accessToken,
       name: customer.name,
       message: "Email verified and user created successfully",
-      //Thêm voucher free ship
       freeShipPromotion: customer.freeShipPromotion,
     });
   } catch (error) {

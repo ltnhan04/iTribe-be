@@ -36,7 +36,6 @@ const productVariantSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
     },
     status: {
       type: String,
