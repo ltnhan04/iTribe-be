@@ -2,144 +2,7 @@ const Order = require("../../models/order.model");
 const AppError = require("../../helpers/appError.helper");
 
 class RevenueService {
-  static handleRevenueADay = async () => {
-    const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
-
-    const result = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: startOfDay, $lte: endOfDay },
-          status: "delivered"
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalSales: { $sum: "$totalAmount" },
-          totalOrders: { $sum: 1 }
-        }
-      }
-    ]);
-
-    if (result.length === 0) {
-      return {
-        totalSales: 0,
-        totalOrders: 0,
-        date: today
-      };
-    }
-
-    return {
-      totalSales: result[0].totalSales,
-      totalOrders: result[0].totalOrders,
-      date: today
-    };
-  };
-
-  static handleRevenueLastDays = async (days) => {
-    const daysAgo = new Date();
-    daysAgo.setDate(daysAgo.getDate() - parseInt(days, 10));
-
-    const result = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: daysAgo },
-          status: "delivered"
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalSales: { $sum: "$totalAmount" },
-          totalOrders: { $sum: 1 }
-        }
-      }
-    ]);
-
-    if (result.length === 0) {
-      return {
-        totalSales: 0,
-        totalOrders: 0,
-        days: parseInt(days, 10)
-      };
-    }
-
-    return {
-      totalSales: result[0].totalSales,
-      totalOrders: result[0].totalOrders,
-      days: parseInt(days, 10)
-    };
-  };
-
-  static handleCalculateTotalRevenue = async () => {
-    const result = await Order.aggregate([
-      {
-        $match: {
-          status: "delivered"
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalSales: { $sum: "$totalAmount" },
-          totalOrders: { $sum: 1 }
-        }
-      }
-    ]);
-
-    if (result.length === 0) {
-      return {
-        totalSales: 0,
-        totalOrders: 0
-      };
-    }
-
-    return {
-      totalSales: result[0].totalSales,
-      totalOrders: result[0].totalOrders
-    };
-  };
-
-  static handleRevenueByProduct = async () => {
-    const result = await Order.aggregate([
-      {
-        $match: {
-          status: "delivered"
-        }
-      },
-      {
-        $unwind: "$productVariants"
-      },
-      {
-        $lookup: {
-          from: "productvariants",
-          localField: "productVariants.productVariant",
-          foreignField: "_id",
-          as: "productDetails"
-        }
-      },
-      {
-        $unwind: "$productDetails"
-      },
-      {
-        $group: {
-          _id: "$productVariants.productVariant",
-          name: { $first: "$productDetails.name" },
-          totalSales: { $sum: { $multiply: ["$productVariants.quantity", "$productDetails.price"] } },
-          totalOrders: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { totalSales: -1 }
-      }
-    ]);
-
-    return result;
-  };
-
-  static async getRevenueByDateRange(startDate, endDate, groupBy = 'day') {
+  static async getRevenueByDateRange(startDate, endDate, groupBy = "day") {
     try {
       // Validate dates
       if (!startDate || !endDate) {
@@ -165,69 +28,72 @@ class RevenueService {
         {
           $match: {
             createdAt: { $gte: start, $lte: end },
-            status: "delivered"
-          }
-        }
+            status: "delivered",
+          },
+        },
       ];
 
       // Add grouping based on groupBy parameter
       let groupStage = {};
       switch (groupBy) {
-        case 'day':
+        case "day":
           groupStage = {
             _id: {
               year: { $year: "$createdAt" },
               month: { $month: "$createdAt" },
-              day: { $dayOfMonth: "$createdAt" }
-            }
+              day: { $dayOfMonth: "$createdAt" },
+            },
           };
           break;
-        case 'month':
+        case "month":
           groupStage = {
             _id: {
               year: { $year: "$createdAt" },
-              month: { $month: "$createdAt" }
-            }
+              month: { $month: "$createdAt" },
+            },
           };
           break;
-        case 'year':
+        case "year":
           groupStage = {
             _id: {
-              year: { $year: "$createdAt" }
-            }
+              year: { $year: "$createdAt" },
+            },
           };
           break;
         default:
-          throw new AppError("Invalid groupBy parameter. Must be 'day', 'month', or 'year'", 400);
+          throw new AppError(
+            "Invalid groupBy parameter. Must be 'day', 'month', or 'year'",
+            400
+          );
       }
 
       pipeline.push({
         $group: {
           ...groupStage,
           totalSales: { $sum: "$totalAmount" },
-          totalOrders: { $sum: 1 }
-        }
+          totalOrders: { $sum: 1 },
+        },
       });
 
       // Add sorting based on groupBy
       let sortStage = {};
       switch (groupBy) {
-        case 'day':
+        case "day":
           sortStage = {
             "_id.year": 1,
             "_id.month": 1,
-            "_id.day": 1
+            "_id.day": 1,
           };
           break;
-        case 'month':
+        case "month":
           sortStage = {
             "_id.year": 1,
-            "_id.month": 1
+            "_id.month": 1,
           };
           break;
-        case 'year':
+        case "year":
           sortStage = {
-            "_id.year": 1
+            "_id.year": 1,
           };
           break;
       }
@@ -238,12 +104,12 @@ class RevenueService {
       const results = await Order.aggregate(pipeline);
 
       // Format results
-      const formattedResults = results.map(result => {
+      const formattedResults = results.map((result) => {
         let date;
         let label;
 
         switch (groupBy) {
-          case 'day':
+          case "day":
             date = new Date(
               result._id.year,
               result._id.month - 1,
@@ -251,45 +117,44 @@ class RevenueService {
             );
             label = `${result._id.day}/${result._id.month}/${result._id.year}`;
             break;
-          case 'month':
-            date = new Date(
-              result._id.year,
-              result._id.month - 1,
-              1
-            );
+          case "month":
+            date = new Date(result._id.year, result._id.month - 1, 1);
             label = `Tháng ${result._id.month}/${result._id.year}`;
             break;
-          case 'year':
-            date = new Date(
-              result._id.year,
-              0,
-              1
-            );
+          case "year":
+            date = new Date(result._id.year, 0, 1);
             label = `Năm ${result._id.year}`;
             break;
         }
 
         return {
-          date: date.toISOString().split('T')[0],
+          date: date.toISOString().split("T")[0],
           label: label,
           totalSales: result.totalSales,
-          totalOrders: result.totalOrders
+          totalOrders: result.totalOrders,
         };
       });
 
       // Calculate summary
       const summary = {
-        totalSales: formattedResults.reduce((sum, item) => sum + item.totalSales, 0),
-        totalOrders: formattedResults.reduce((sum, item) => sum + item.totalOrders, 0),
-        averageOrderValue: formattedResults.length > 0 
-          ? formattedResults.reduce((sum, item) => sum + item.totalSales, 0) / 
-            formattedResults.reduce((sum, item) => sum + item.totalOrders, 0)
-          : 0
+        totalSales: formattedResults.reduce(
+          (sum, item) => sum + item.totalSales,
+          0
+        ),
+        totalOrders: formattedResults.reduce(
+          (sum, item) => sum + item.totalOrders,
+          0
+        ),
+        averageOrderValue:
+          formattedResults.length > 0
+            ? formattedResults.reduce((sum, item) => sum + item.totalSales, 0) /
+              formattedResults.reduce((sum, item) => sum + item.totalOrders, 0)
+            : 0,
       };
 
       return {
         data: formattedResults,
-        summary
+        summary,
       };
     } catch (error) {
       console.error("Error in getRevenueByDateRange:", error);
@@ -303,7 +168,7 @@ class RevenueService {
       const end = new Date(year, month, 0);
       end.setHours(23, 59, 59, 999);
 
-      const result = await this.getRevenueByDateRange(start, end, 'day');
+      const result = await this.getRevenueByDateRange(start, end, "day");
       return result;
     } catch (error) {
       console.error("Error in getRevenueByMonth:", error);
@@ -317,7 +182,7 @@ class RevenueService {
       const end = new Date(year, 11, 31);
       end.setHours(23, 59, 59, 999);
 
-      const result = await this.getRevenueByDateRange(start, end, 'month');
+      const result = await this.getRevenueByDateRange(start, end, "month");
       return result;
     } catch (error) {
       console.error("Error in getRevenueByYear:", error);
@@ -350,58 +215,61 @@ class RevenueService {
         {
           $match: {
             createdAt: { $gte: start, $lte: end },
-            status: "delivered"
-          }
+            status: "delivered",
+          },
         },
         {
           $group: {
             _id: {
               year: { $year: "$createdAt" },
               month: { $month: "$createdAt" },
-              day: { $dayOfMonth: "$createdAt" }
+              day: { $dayOfMonth: "$createdAt" },
             },
             totalSales: { $sum: "$totalAmount" },
-            totalOrders: { $sum: 1 }
-          }
+            totalOrders: { $sum: 1 },
+          },
         },
         {
           $sort: {
             "_id.year": 1,
             "_id.month": 1,
-            "_id.day": 1
-          }
-        }
+            "_id.day": 1,
+          },
+        },
       ]);
 
       // Format results
-      const formattedResults = result.map(item => {
-        const date = new Date(
-          item._id.year,
-          item._id.month - 1,
-          item._id.day
-        );
+      const formattedResults = result.map((item) => {
+        const date = new Date(item._id.year, item._id.month - 1, item._id.day);
 
         return {
-          date: date.toISOString().split('T')[0],
+          date: date.toISOString().split("T")[0],
           label: `${item._id.day}/${item._id.month}/${item._id.year}`,
           totalSales: item.totalSales,
-          totalOrders: item.totalOrders
+          totalOrders: item.totalOrders,
         };
       });
 
       // Calculate summary
       const summary = {
-        totalSales: formattedResults.reduce((sum, item) => sum + item.totalSales, 0),
-        totalOrders: formattedResults.reduce((sum, item) => sum + item.totalOrders, 0),
-        averageOrderValue: formattedResults.length > 0 
-          ? formattedResults.reduce((sum, item) => sum + item.totalSales, 0) / 
-            formattedResults.reduce((sum, item) => sum + item.totalOrders, 0)
-          : 0
+        totalSales: formattedResults.reduce(
+          (sum, item) => sum + item.totalSales,
+          0
+        ),
+        totalOrders: formattedResults.reduce(
+          (sum, item) => sum + item.totalOrders,
+          0
+        ),
+        averageOrderValue:
+          formattedResults.length > 0
+            ? formattedResults.reduce((sum, item) => sum + item.totalSales, 0) /
+              formattedResults.reduce((sum, item) => sum + item.totalOrders, 0)
+            : 0,
       };
 
       return {
         data: formattedResults,
-        summary
+        summary,
       };
     } catch (error) {
       console.error("Error in getRevenueByCustomDateRange:", error);

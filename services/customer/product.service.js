@@ -222,6 +222,7 @@ class ProductService {
         stock: variant.stock_quantity,
         images: variant.images,
         rating,
+        reviews: variant.reviews,
         slug: variant.slug,
       };
     });

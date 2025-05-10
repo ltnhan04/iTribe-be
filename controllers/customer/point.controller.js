@@ -1,6 +1,7 @@
 const PointService = require("../../services/customer/point.service");
+const PointVoucher = require("../../models/pointVoucher.model");
 const AppError = require("../../helpers/appError.helper");
-//Lấy số điểm của user
+
 const getCustomerPoints = async (req, res, next) => {
   try {
     const points = await PointService.getCustomerPoints(req.user._id);
@@ -12,7 +13,7 @@ const getCustomerPoints = async (req, res, next) => {
     next(error);
   }
 };
-//Đổi điểm lấy voucher
+
 const exchangePointsForVoucher = async (req, res, next) => {
   try {
     const { pointsToUse } = req.body;
@@ -34,7 +35,7 @@ const exchangePointsForVoucher = async (req, res, next) => {
     next(error);
   }
 };
-//Lấy voucher của user
+
 const getCustomerVouchers = async (req, res, next) => {
   try {
     const vouchers = await PointVoucher.find({
@@ -52,8 +53,40 @@ const getCustomerVouchers = async (req, res, next) => {
   }
 };
 
+const applyVoucher = async (req, res, next) => {
+  try {
+    const { voucherCode, orderTotal } = req.body;
+    const appliedVoucher = await PointService.applyVoucherToOrder(
+      voucherCode,
+      req.user._id,
+      orderTotal
+    );
+    res.status(200).json({
+      message: "Applied voucher successfully",
+      data: appliedVoucher,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateVoucherAsUsed = async (req, res, next) => {
+  try {
+    const { voucherId, orderId } = req.body;
+    const markUsed = await PointService.markVoucherAsUsed(voucherId, orderId);
+    res.status(200).json({
+      message: "Updated voucher status successfully",
+      data: markUsed,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCustomerPoints,
   exchangePointsForVoucher,
   getCustomerVouchers,
+  applyVoucher,
+  updateVoucherAsUsed,
 };

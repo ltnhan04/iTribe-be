@@ -3,12 +3,10 @@ const PointVoucher = require("../../models/pointVoucher.model");
 const AppError = require("../../helpers/appError.helper");
 
 class PointService {
-  // Tính điểm dựa trên giá trị đơn hàng
   static calculatePoints(orderAmount) {
     return Math.floor(orderAmount / 100000); // 100.000 VND = 1 điểm
   }
 
-  // Tích điểm khi đơn hàng hoàn thành
   static async addPointsForOrder(order) {
     try {
       const points = this.calculatePoints(order.totalAmount);
@@ -32,7 +30,6 @@ class PointService {
     }
   }
 
-  // Lấy tổng điểm của khách hàng
   static async getCustomerPoints(customerId) {
     try {
       const points = await Point.find({
@@ -48,16 +45,13 @@ class PointService {
     }
   }
 
-  // Đổi điểm lấy voucher
   static async exchangePointsForVoucher(customerId, pointsToUse) {
     try {
-      // Kiểm tra số điểm có đủ không
       const availablePoints = await this.getCustomerPoints(customerId);
       if (availablePoints < pointsToUse) {
         throw new AppError("Insufficient points", 400);
       }
 
-      // Xác định giá trị voucher
       let discountAmount;
       if (pointsToUse >= 500) {
         discountAmount = 1000000; // 500 điểm = 1 triệu
@@ -69,10 +63,12 @@ class PointService {
         throw new AppError("Invalid points amount", 400);
       }
 
-      // Tạo voucher mới
       const voucher = new PointVoucher({
         customer: customerId,
-        code: `POINT_${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        code: `POINT_${Math.random()
+          .toString(36)
+          .substring(2, 8)
+          .toUpperCase()}`,
         discountAmount,
         pointsUsed: pointsToUse,
         validFrom: new Date(),
@@ -81,7 +77,6 @@ class PointService {
 
       await voucher.save();
 
-      // Trừ điểm đã sử dụng
       await this.deductPoints(customerId, pointsToUse);
 
       return voucher;
@@ -91,14 +86,13 @@ class PointService {
     }
   }
 
-  // Trừ điểm đã sử dụng
   static async deductPoints(customerId, pointsToDeduct) {
     try {
       const points = await Point.find({
         customer: customerId,
         isExpired: false,
         expiryDate: { $gt: new Date() },
-      }).sort({ expiryDate: 1 }); // Sắp xếp theo thời hạn sử dụng
+      }).sort({ expiryDate: 1 });
 
       let remainingPoints = pointsToDeduct;
       for (const point of points) {
@@ -121,7 +115,6 @@ class PointService {
     }
   }
 
-  // Kiểm tra và xóa điểm hết hạn
   static async checkAndRemoveExpiredPoints() {
     try {
       const expiredPoints = await Point.find({
@@ -141,7 +134,6 @@ class PointService {
     }
   }
 
-  // Kiểm tra voucher hợp lệ
   static async validateVoucher(code, customerId) {
     try {
       const voucher = await PointVoucher.findOne({
@@ -163,7 +155,6 @@ class PointService {
     }
   }
 
-  // Đánh dấu voucher đã sử dụng
   static async markVoucherAsUsed(voucherId, orderId) {
     try {
       const voucher = await PointVoucher.findByIdAndUpdate(
@@ -181,6 +172,17 @@ class PointService {
       throw error;
     }
   }
+
+  static applyVoucherToOrder = async (voucherCode, customerId, orderTotal) => {
+    const voucher = await this.validateVoucher(voucherCode, customerId);
+    const discountedTotal = Math.max(orderTotal - voucher.discountAmount, 0);
+
+    return {
+      discountedTotal,
+      voucherId: voucher._id,
+      discountAmount: voucher.discountAmount,
+    };
+  };
 }
 
-module.exports = PointService; 
+module.exports = PointService;

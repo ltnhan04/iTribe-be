@@ -9,7 +9,6 @@ const initializeShippingMethods = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");
 
-    // Xóa tất cả shipping methods cũ
     await ShippingMethod.deleteMany({});
     console.log("Cleared existing shipping methods");
 
@@ -17,21 +16,20 @@ const initializeShippingMethods = async () => {
       {
         name: "Tiêu chuẩn",
         basePrice: 15000,
-        isActive: true
+        isActive: true,
       },
       {
         name: "Nhanh",
         basePrice: 25000,
-        isActive: true
+        isActive: true,
       },
       {
         name: "Hỏa tốc",
         basePrice: 40000,
-        isActive: true
-      }
+        isActive: true,
+      },
     ];
 
-    // Thêm các shipping methods mới
     const createdMethods = await ShippingMethod.insertMany(methods);
     console.log("Created shipping methods:", createdMethods);
 
@@ -43,4 +41,4 @@ const initializeShippingMethods = async () => {
   }
 };
 
-initializeShippingMethods(); 
+initializeShippingMethods();

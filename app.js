@@ -3,111 +3,38 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const http = require("http");
-const socketIo = require("socket.io");
 
 const connectDB = require("./libs/db");
-const socketHandler = require("./libs/socket");
-// Customer routes
-const authRoutes = require("./routes/customer/auth.route");
-const productRoutes = require("./routes/customer/product.route");
-const ordersRoutes = require("./routes/customer/order.route");
-const promotionRoutes = require("./routes/customer/promotion.route");
-const reviewRoutes = require("./routes/customer/review.route");
-const paymentRoutes = require("./routes/customer/payment.route");
-const provinceRoutes = require("./routes/customer/province.route");
-const shippingRoutes = require("./routes/customer/shipping.route");
-const pointRoutes = require("./routes/customer/point.route");
-const recommendationRoutes = require("./routes/customer/recommendation.route");
-const chatbotRoute = require("./routes/customer/chatbot.route");
-const revenueRoutes = require("./routes/admin/revenue.route");
-require("./libs/passport");
-// Admin routes
-const productRoutesAdmin = require("./routes/admin/product.route");
-const userRoutesAdmin = require("./routes/admin/user.route");
-const orderRouteAdmin = require("./routes/admin/order.route");
-const promotionRoutesAdmin = require("./routes/admin/promotion.route");
-const reviewRoutesAdmin = require("./routes/admin/review.route");
-const notificationRouteAdmin = require("./routes/admin/notification.route");
-const productVariantRouteAdmin = require("./routes/admin/productVariant.route");
-const adminCategoryRoutes = require("./routes/admin/category.route");
-const revenueRoutesAdmin = require("./routes/admin/revenue.route");
-// // Chat routes
-// const chatRoutes = require("./routes/chat.route");
+const initSocket = require("./libs/initSocket");
+
+const customerRoutes = require("./routes/customer");
+const adminRoutes = require("./routes/admin");
+const messageRoutes = require("./routes/message");
+const corsOptions = require("./config/cors");
 
 dotenv.config();
+
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: [
-      "http://localhost:3000",
-      "https://i-tribe.vercel.app",
-      "https://i-tribe-admin.vercel.app",
-      "http://localhost:5173",
-      "*",
-    ],
-    credentials: true,
-  },
-});
 
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
-
-const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "https://i-tribe.vercel.app",
-    "https://i-tribe-admin.vercel.app",
-    "http://localhost:5173",
-    "*",
-  ],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-};
-
 app.use(cors(corsOptions));
-
-// Customer routes
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/products", productRoutes);
-app.use("/api/v1/orders", ordersRoutes);
-app.use("/api/v1/reviews", reviewRoutes);
-app.use("/api/v1/promotions", promotionRoutes);
-app.use("/api/v1/payment", paymentRoutes);
-// Shipping routes
-app.use("/api/v1/shipping", shippingRoutes);
-// Point routes
-app.use("/api/v1/points", pointRoutes);
-// Recommendation routes
-app.use("/api/v1/recommendations", recommendationRoutes);
-// app.use("/api/v1/chat", chatRoutes);
-app.use("/api/v1", provinceRoutes);
-app.use("/api/v1/chatbot", chatbotRoute);
-
-// Admin routes
-app.use("/api/v1/admin/products", productRoutesAdmin);
-app.use("/api/v1/admin/products/variant", productVariantRouteAdmin);
-app.use("/api/v1/admin/users", userRoutesAdmin);
-app.use("/api/v1/admin/orders", orderRouteAdmin);
-app.use("/api/v1/admin/reviews", reviewRoutesAdmin);
-app.use("/api/v1/admin/promotions", promotionRoutesAdmin);
-app.use("/api/v1/admin/notifications", notificationRouteAdmin);
-app.use("/api/v1/admin/categories", adminCategoryRoutes);
-app.use("/api/v1/admin/revenue", revenueRoutesAdmin);
-
-app.get("/", (_, res) => {
-  res.send("Hello World!");
-});
-
-socketHandler(io);
+// routes
+app.use("/api/v1", customerRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/messages", messageRoutes);
+app.get("/", (_, res) => res.send("Hello World!"));
 
 app.use((error, _req, res, _next) => {
   const statusCode = error.statusCode || 500;
   const message = error.message || "Internal Server Error";
   res.status(statusCode).json({ message });
 });
+
+initSocket(server);
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
