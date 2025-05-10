@@ -9,7 +9,7 @@ const initSocket = require("./libs/initSocket");
 
 const customerRoutes = require("./routes/customer");
 const adminRoutes = require("./routes/admin");
-const messageRoutes = require("./routes/message");
+const messageRoutes = require("./routes/message.routes");
 const corsOptions = require("./config/cors");
 
 dotenv.config();
