@@ -1,6 +1,6 @@
 const Message = require("../models/message.model");
 
-exports.createMessage = async (req, res) => {
+exports.createMessage = async (req, res, next) => {
   try {
     const { sender_id, receive_id, text, image } = req.body;
     const message = await Message.create({
@@ -11,11 +11,11 @@ exports.createMessage = async (req, res) => {
     });
     res.status(201).json(message);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-exports.getMessages = async (req, res) => {
+exports.getMessages = async (req, res, next) => {
   try {
     const { sender_id, receive_id } = req.query;
     const messages = await Message.find({
@@ -26,6 +26,6 @@ exports.getMessages = async (req, res) => {
     }).sort({ createdAt: 1 });
     res.status(200).json(messages);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
-}; 
+};
