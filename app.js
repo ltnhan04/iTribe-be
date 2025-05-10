@@ -16,6 +16,7 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+require("./libs/passport");
 
 const PORT = process.env.PORT || 5000;
 
